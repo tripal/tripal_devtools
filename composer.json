@@ -1,0 +1,25 @@
+{
+  "name": "tripal/tripal_devtools",
+  "type": "drupal-module",
+  "description": "A Drupal extension module which provides helpful tools for developing Tripal Extension Modules.",
+  "keywords": ["Drupal", "tripal", "development", "drush-integration"],
+  "homepage": "https://github.com/tripal/tripal_devtools",
+  "support": {
+    "issues": "https://github.com/tripal/tripal_jbrowse/issues"
+  },
+  "license": "GPL-2.0-or-later",
+  "minimum-stability": "dev",
+  "authors": [
+    {
+      "name": "Lacey-Anne Sanderson",
+      "homepage": "https://github.com/laceysanderson/",
+      "role": "Lead Developer"
+    }
+  ],
+  "require": {
+    "php": "^8.2",
+    "drupal/core": "^10.0",
+    "drush/drush": "^12.1",
+    "tripal/tripal": "^4.0-alpha1"
+  }
+}

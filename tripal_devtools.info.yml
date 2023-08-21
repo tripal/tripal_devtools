@@ -1,0 +1,7 @@
+name: 'Tripal Developer Tools'
+type: module
+description: 'Provides tools to make development of Tripal extension modules easier!'
+package: Tripal Development
+core_version_requirement: ^10
+dependencies:
+  - tripal:tripal
