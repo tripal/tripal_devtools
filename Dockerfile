@@ -1,5 +1,6 @@
 ARG drupalversion='10.1.x-dev'
-FROM tripalproject/tripaldocker:drupal${drupalversion}-php8.2-pgsql13-noChado
+ARG phpversion='8.2'
+FROM tripalproject/tripaldocker:drupal${drupalversion}-php${phpversion}-pgsql13-noChado
 
 ## Ensures that we don't make assumptions about the name of Chado
 ## And sets us up to test multiple Chado instances.
