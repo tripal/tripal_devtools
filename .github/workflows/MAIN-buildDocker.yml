@@ -20,6 +20,8 @@ jobs:
           - "10.1.x-dev"
     name: Docker Build (drupal${{ matrix.drupal-version }})
     steps:
+      - uses: actions/checkout@v3
+        name: Check out code
       - uses: mr-smithers-excellent/docker-build-push@v5
         name: Build & push Docker image.
         with:
