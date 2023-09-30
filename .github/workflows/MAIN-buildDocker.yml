@@ -40,7 +40,6 @@ jobs:
         with:
           image: tripalproject/tripaldocker-devtools
           tags: drupal${{ matrix.drupal-version }}-php${{ matrix.php-version }}-pgsql${{ matrix.pgsql-version }}
-          dockerfile: tripaldocker/Dockerfile-php${{ matrix.php-version }}-pgsql${{ matrix.pgsql-version }}
           registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
@@ -52,7 +51,6 @@ jobs:
         with:
           image: tripalproject/tripaldocker-devtools
           tags: drupal${{ matrix.drupal-version }}
-          dockerfile: tripaldocker/Dockerfile-php${{ matrix.php-version }}-pgsql${{ matrix.pgsql-version }}
           registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
