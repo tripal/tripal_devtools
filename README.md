@@ -2,7 +2,34 @@
 
 Provides tools to make development of Tripal extension modules easier!
 
-**Note: This module is soon to be included by default in the core Tripal Docker**
+## Requirements
+
+ - Tripal 4.x
+ - Drush 12+
+ - PHP 8.2+
+
+## Usage
+
+This module is expected to be used in development only. We suggest using it with
+a dockerized Tripal site for development of extension modules. That said, as long
+as you have the above requirements you can install it on a local drupal site using
+composer.
+
+### Docker Setup
+
+If you are using TripalDocker to develop your extension module, then ensure that when creating the container using docker run you mount your local copy of your module code inside the docker.
+
+For example, if your module is called `my_module` and your current working directory contains your local copy of this module, then your run command would be:
+
+```
+docker run --publish=80:80 --name=CONTAINERNAME -tid --volume=$(pwd):/var/www/drupal9/web/modules/contrib/my_module tripalproject/tripaldocker-devtools:latest
+docker exec CONTAINERNAME service postgresql restart
+```
+
+### Local installation
+
+See the Dockerfile in this repository for commands.
+
 
 ## Tools
 
@@ -25,18 +52,12 @@ The following commands are currently implemented:
 
 #### Usage:
 
-If you are using TripalDocker to develop your extension module, then ensure that when creating the container using docker run you mount your local copy of your module code inside the docker.
-
-For example, if your module is called `my_module` and your current working directory contains your local copy of this module, then your run command would be:
-
-```
-docker run --publish=9000:80 --name=t4 -tid --volume=$(pwd):/var/www/drupal9/web/modules/contrib/my_module tripalproject/tripaldocker:latest
-```
+**Assumes you have set up your development environment as descriped under Docker Setup above.**
 
 Now that you have linked the internal docker copy and your local copy you can run drush inside your docker to generate the files and see them appear locally!
 
 ```
-docker exec -it t4 drush generate tripal-chado:field
+docker exec -it CONTAINERNAME drush generate tripal-chado:field
 ```
 
 And then answer the prompts. The generator then takes your answers, fills them into our templates and provides you with a set of files to work with!
