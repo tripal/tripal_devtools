@@ -1,6 +1,6 @@
 <?php declare(strict_types = 1);
 
-namespace Drupal\tripal_chado\Drush\Generators;
+namespace Drupal\tripal_devtools\Drush\Generators;
 
 use DrupalCodeGenerator\Asset\AssetCollection as Assets;
 use DrupalCodeGenerator\Attribute\Generator;
