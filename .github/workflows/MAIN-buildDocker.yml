@@ -27,7 +27,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           buildArgs: "drupalversion=${{ matrix.drupal-version }},phpversion=${{ matrix.php-version}}"
-          labels: 'tripal.branch=4.x,drupal.version.label="${{ matrix.label }}",php.version.label="${{ matrix.php-version }}", postgresql.version.label="${{ matrix.pgsql-version }}"'
+          labels: 'tripal.branch=4.x,drupal.version.label="drupal${{ matrix.drupal-version }}",php.version.label="${{ matrix.php-version }}", postgresql.version.label="${{ matrix.pgsql-version }}"'
       - uses: mr-smithers-excellent/docker-build-push@v5
         name: Build latest using 10.1.x-dev, PHP 8.2, PgSQL 13
         if: ${{ matrix.drupal-version == '10.1.x-dev' && matrix.php-version == '8.2' && matrix.pgsql-version == '13' }}
