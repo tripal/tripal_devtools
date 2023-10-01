@@ -28,6 +28,15 @@ class {{ field_class }} extends TripalFieldItemBase {
   /**
    * {@inheritdoc}
    */
+  public static function defaultStorageSettings() {
+    $settings = parent::defaultStorageSettings();
+    $settings['storage_plugin_id'] = 'drupal_sql_storage';
+    return $settings;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function tripalTypes($field_definition) {
 
     // Use the field settings to extract information we need to make generic fields.
