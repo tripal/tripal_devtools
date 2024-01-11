@@ -14,7 +14,7 @@ use DrupalCodeGenerator\Validator\Required;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 #[Generator(
-  name: 'tripal_extension_module',
+  name: 'tripal:extension_module',
   description: 'Generates a Tripal extension module',
   templatePath: __DIR__ . '/../../../templates/generator/tripal_extension_module',
   type: GeneratorType::MODULE,
