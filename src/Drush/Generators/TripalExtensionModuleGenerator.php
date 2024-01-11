@@ -55,8 +55,7 @@ final class TripalExtensionModuleGenerator extends BaseGenerator implements Cont
 
     $vars['class_prefix'] = '{machine_name|camelize}';
 
-    $assets->addFile('{machine_name}/{machine_name}.info.yml', 'module.info.yml.twig');
-
+    
     if ($ir->confirm('Would you like to create module file?', TRUE)) {
       $assets->addFile('{machine_name}/{machine_name}.module', 'module.module.twig');
     }
@@ -68,28 +67,30 @@ final class TripalExtensionModuleGenerator extends BaseGenerator implements Cont
     if ($ir->confirm('Would you like to create libraries.yml file?', TRUE)) {
       $assets->addFile('{machine_name}/{machine_name}.libraries.yml', 'module.libraries.yml.twig');
     }
-
+    
     if ($ir->confirm('Would you like to create permissions.yml file?', FALSE)) {
       $assets->addFile('{machine_name}/{machine_name}.permissions.yml', 'module.permissions.yml.twig');
       $vars['permissions'] = TRUE;
     }
-
+    
     // @todo Create an event subscriber? see https://github.com/Chi-teck/drupal-code-generator/blob/985d8343a143437050b89a36c0d20ff1fc10f8bf/src/Command/Module.php
-
+    
     if ($vars['controller'] = $ir->confirm('Would you like to create a controller?', TRUE)) {
       $assets->addFile("{machine_name}/src/Controller/{class_prefix}Controller.php")
-        ->template('ExampleController.php.twig');
+      ->template('ExampleController.php.twig');
     }
-
+    
     if ($vars['form'] = $ir->confirm('Would you like to create settings form?', TRUE)) {
-      $assets->addFile('{machine_name}/src/Form/SettingsForm.php.twig')
-        ->template('SettingsForm.php.twig');
+      $assets->addFile('{machine_name}/src/Form/SettingsForm.php')
+      ->template('SettingsForm.php.twig');
       $assets->addFile('{machine_name}/config/schema/{machine_name}.schema.yml')
-        ->template('module.schema.yml.twig');
+      ->template('module.schema.yml.twig');
       $assets->addFile('{machine_name}/{machine_name}.links.menu.yml')
-        ->template('module.links.menu.twig');
+      ->template('module.links.menu.twig');
     }
-
+    
+    $assets->addFile('{machine_name}/{machine_name}.info.yml', 'module.info.yml.twig');
+    
     if ($vars['controller'] || $vars['form']) {
       $assets->addFile('{machine_name}/{machine_name}.routing.yml')
         ->template('module.routing.yml.twig');

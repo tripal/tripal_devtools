@@ -9,3 +9,6 @@ dependencies:
   - {{ dependency }}
   {% endfor %}
 {% endif %}
+{% if form %}
+configure: {{ machine_name }}.settings_form
+{% endif %}
