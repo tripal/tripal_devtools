@@ -81,7 +81,7 @@ final class TripalExtensionModuleGenerator extends BaseGenerator implements Cont
     }
     
     if ($vars['form'] = $ir->confirm('Would you like to create settings form?', TRUE)) {
-      $assets->addFile('{machine_name}/src/Form/SettingsForm.php')
+      $assets->addFile('{machine_name}/src/Form/{machine_name|camelize}SettingsForm.php')
       ->template('SettingsForm.php.twig');
       $assets->addFile('{machine_name}/config/schema/{machine_name}.schema.yml')
       ->template('module.schema.yml.twig');
@@ -90,7 +90,7 @@ final class TripalExtensionModuleGenerator extends BaseGenerator implements Cont
     }
     
     $assets->addFile('{machine_name}/{machine_name}.info.yml', 'module.info.yml.twig');
-    
+
     if ($vars['controller'] || $vars['form']) {
       $assets->addFile('{machine_name}/{machine_name}.routing.yml')
         ->template('module.routing.yml.twig');
