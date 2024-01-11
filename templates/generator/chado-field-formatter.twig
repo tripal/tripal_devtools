@@ -28,11 +28,11 @@ class {{ formatter_class }} extends ChadoFormatterBase {
     $elements = [];
 
     // Use render arrays to generate markup for your field.
-    // foreach($items as $delta => $item) {
-    //   $elements[$delta] = [
-    //     "#markup" => $item->get("value")->getString(),
-    //   ];
-    // }
+    foreach($items as $delta => $item) {
+      $elements[$delta] = [
+        "#markup" => $item->get("value")->getString(),
+      ];
+    }
 
     return $elements;
   }

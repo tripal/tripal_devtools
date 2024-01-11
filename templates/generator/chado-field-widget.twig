@@ -29,13 +29,30 @@ class {{ widget_class }} extends ChadoWidgetBase {
     // Grab the values for our properties based on the passed in delta.
     // For fields with a cardinality above 1, this is called one per record
     // with the delta indicating the current record.
-    // $item_vals = $items[$delta]->getValue();
+    $item_vals = $items[$delta]->getValue();
 
     // Define your form elements here.
-    // $element['value'] = [
-    //   '#type' => 'value',
-    //   '#default_value' => $item_vals['value'] ?? 0,
-    // ];
+    // For this you will use the form API to specify a form element for
+    // FOR EVERY PROPERTY TYPE you specified in your field type class.
+    // The key for each form element should match the property type key.
+
+    // The record_id form element should always be here just as it should
+    // always be in the tripalTypes() method.
+    $element['record_id'] = [
+      '#type' => 'hidden',
+      '#default_value' => $item_vals['record_id'] ?? 0,
+    ];
+
+    // Since we specified the action for the uniquename property as
+    // read_value, we will just display it back to the user here but
+    // not allow them to change it. If we wanted to let them change it,
+    // then the action in the property type should have been store.
+    $element['uniquename] = [
+      '#type' => 'textfield',
+      '#title' => 'Unique Name',
+      '#disabled' => TRUE,
+      '#value' => $item_vals['uniquename'] ?? '',
+    ];
 
     return $element;
   }

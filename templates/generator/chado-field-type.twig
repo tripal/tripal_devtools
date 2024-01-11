@@ -27,19 +27,84 @@ class {{ field_class }} extends ChadoFieldItemBase {
 
   public static $id = "{{ field_id }}";
 
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function mainPropertyName() {
+
+    // Replace label with the key of the main property type in tripalTypes.
+    // The main property type should be the one that provides the most information
+    // to the user about this field.
+    return 'uniquename';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function defaultFieldSettings() {
+    $settings = parent::defaultFieldSettings();
+
+    // This is the default term for this field.
+    // The admin can change this term when attaching the field
+    $settings['termIdSpace'] = '';
+    $settings['termAccession'] = '';
+    return $settings;
+  }
+
   /**
    * {@inheritdoc}
    */
   public static function tripalTypes($field_definition) {
-    $record_id_term = 'SIO:000729';
-
     $entity_type_id = $field_definition->getTargetEntityTypeId();
-    $settings = $field_definition->getSetting('storage_plugin_settings');
 
-    return [
-      // Add your chado property types here.
-      // This is REQUIRED before you can test this field through the UI.
-    ];
+    // Get the base table columns needed for this field.
+    $settings = $field_definition->getSetting('storage_plugin_settings');
+    $base_table = $settings['base_table'];
+
+    // If we don't have a base table then we're not ready to specify the
+    // properties for this field.
+    if (!$base_table) {
+      return;
+    }
+
+    // Get the length of the database fields so we don't go over the size limit.
+    $chado = \Drupal::service('tripal_chado.database');
+    $schema = $chado->schema();
+    $base_schema_def = $schema->getTableDef($base_table, ['format' => 'Drupal']);
+    $base_pkey_col = $base_schema_def['primary key'];
+    $uniquename_length = $base_schema_def['fields']['uniquename']['size'];
+
+    // Get the property terms by using the Chado table columns they map to.
+    // This is only used for property types that map to chado columns.
+    // For your own local terms, you can just use the 'idspace:accession'
+    // notation directly like we did for the record_id_term below.
+    $storage = \Drupal::entityTypeManager()->getStorage('chado_term_mapping');
+    $mapping = $storage->load('core_mapping');
+    $record_id_term = 'SIO:000729';
+    $uniquename_term = $mapping->getColumnTermId($base_table, 'uniquename');
+
+    $properties = [];
+
+    // We always add the primary key for the table our field is attached to
+    // as follows. This creates a ChadoPropertyType object of type integer,
+    // indicates the term to use for it which must already exist and specifies
+    // how the value for this property should be selected in chado.
+    $properties[] = new ChadoIntStoragePropertyType($entity_type_id, self::$id, 'record_id', $record_id_term, [
+      'action' => 'store_id',
+      'drupal_store' => TRUE,
+      'path' => $base_table . '.' . $base_pkey_col,
+    ]);
+
+    // Here we add a uniquename property type as an example.
+    // you will add any properties you need for your field like this.
+    // See the documentation for more information about field property types.
+    $properties[] =  new ChadoVarCharStoragePropertyType($entity_type_id, self::$id, 'uniquename', $uniquename_term, $uniquename_length, [
+      'action' => 'read_value',
+      'path' => $base_table . '.uniquename',
+    ]);
+
+    return $properties;
   }
 
 }
