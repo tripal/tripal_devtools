@@ -22,7 +22,8 @@ If you are using TripalDocker to develop your extension module, then ensure that
 For example, if your module is called `my_module` and your current working directory contains your local copy of this module, then your run command would be:
 
 ```
-docker run --publish=80:80 --name=CONTAINERNAME -tid --volume=$(pwd):/var/www/drupal9/web/modules/contrib/my_module tripalproject/tripaldocker-devtools:latest
+docker run --publish=80:80 --name=CONTAINERNAME -tid \
+  --volume=$(pwd):/var/www/drupal/web/modules/contrib/my_module tripalproject/tripaldocker-devtools:latest
 docker exec CONTAINERNAME service postgresql restart
 ```
 
