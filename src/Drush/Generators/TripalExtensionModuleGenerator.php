@@ -69,8 +69,9 @@ final class TripalExtensionModuleGenerator extends BaseGenerator implements Cont
       $assets->addFile('{machine_name}/{machine_name}.libraries.yml', 'module.libraries.yml.twig');
     }
 
-    if ($ir->confirm('Would you like to create permissions.yml file?', TRUE)) {
+    if ($ir->confirm('Would you like to create permissions.yml file?', FALSE)) {
       $assets->addFile('{machine_name}/{machine_name}.permissions.yml', 'module.permissions.yml.twig');
+      $vars['permissions'] = TRUE;
     }
 
     // @todo Create an event subscriber? see https://github.com/Chi-teck/drupal-code-generator/blob/985d8343a143437050b89a36c0d20ff1fc10f8bf/src/Command/Module.php

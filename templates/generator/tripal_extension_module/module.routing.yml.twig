@@ -15,5 +15,10 @@
     _title: '{{ name }} settings'
     _form: 'Drupal\{{ machine_name }}\Form\SettingsForm'
   requirements:
-    _permission: 'administer {{ machine_name }} configuration'
+  {% if permissions %}
+    _permission: 'administer {{ machine_name }}'
+  {% endif %}
+  {% if not permissions %}
+    _permission: 'administer tripal'
+  {% endif %}
 {% endif %}
