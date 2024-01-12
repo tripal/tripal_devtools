@@ -11,6 +11,7 @@ use Drupal\tripal_chado\TripalField\ChadoFieldItemBase;
 // Make sure to include the Property type class you are going to create
 // in your addTypes() method below.
 use Drupal\tripal_chado\TripalStorage\ChadoIntStoragePropertyType;
+use Drupal\tripal_chado\TripalStorage\ChadoVarCharStoragePropertyType;
 
 /**
  * Plugin implementation of the '{{ field_id }}' field type.
@@ -99,7 +100,7 @@ class {{ field_class }} extends ChadoFieldItemBase {
     // Here we add a uniquename property type as an example.
     // you will add any properties you need for your field like this.
     // See the documentation for more information about field property types.
-    $properties[] =  new ChadoVarCharStoragePropertyType($entity_type_id, self::$id, 'uniquename', $uniquename_term, $uniquename_length, [
+    $properties[] =  new ChadoVarCharStoragePropertyType($entity_type_id, self::$id, 'uniquename_read', $uniquename_term, $uniquename_length, [
       'action' => 'read_value',
       'path' => $base_table . '.uniquename',
     ]);
