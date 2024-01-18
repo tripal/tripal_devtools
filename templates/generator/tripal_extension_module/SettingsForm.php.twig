@@ -31,6 +31,7 @@ class {{ machine_name|camelize }}SettingsForm extends ConfigFormBase {
     $form['example'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Example'),
+      '#prefix' => $this->t('Please type the word "example".'),
       '#default_value' => $this->config('{{ machine_name }}.settings')->get('example'),
     ];
     return parent::buildForm($form, $form_state);
