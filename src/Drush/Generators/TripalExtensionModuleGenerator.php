@@ -43,8 +43,8 @@ final class TripalExtensionModuleGenerator extends BaseGenerator implements Cont
   protected function generate(array &$vars, AssetCollection $assets): void {
     $ir = $this->createInterviewer($vars);
 
-    $vars['name'] = $ir->askName();
     $vars['machine_name'] = $ir->askMachineName();
+    $vars['name'] = $ir->askName();
 
     $vars['description'] = $ir->ask('Module description', 'Provides additional functionality for the site.', new Required());
     $vars['package'] = $ir->ask('Package', 'Tripal Extension');
@@ -55,7 +55,6 @@ final class TripalExtensionModuleGenerator extends BaseGenerator implements Cont
 
     $vars['class_prefix'] = '{machine_name|camelize}';
 
-    
     if ($ir->confirm('Would you like to create module file?', TRUE)) {
       $assets->addFile('{machine_name}/{machine_name}.module', 'module.module.twig');
     }
@@ -67,19 +66,19 @@ final class TripalExtensionModuleGenerator extends BaseGenerator implements Cont
     if ($ir->confirm('Would you like to create libraries.yml file?', TRUE)) {
       $assets->addFile('{machine_name}/{machine_name}.libraries.yml', 'module.libraries.yml.twig');
     }
-    
+
     if ($ir->confirm('Would you like to create permissions.yml file?', FALSE)) {
       $assets->addFile('{machine_name}/{machine_name}.permissions.yml', 'module.permissions.yml.twig');
       $vars['permissions'] = TRUE;
     }
-    
+
     // @todo Create an event subscriber? see https://github.com/Chi-teck/drupal-code-generator/blob/985d8343a143437050b89a36c0d20ff1fc10f8bf/src/Command/Module.php
-    
+
     if ($vars['controller'] = $ir->confirm('Would you like to create a controller?', TRUE)) {
       $assets->addFile("{machine_name}/src/Controller/{class_prefix}Controller.php")
       ->template('ExampleController.php.twig');
     }
-    
+
     if ($vars['form'] = $ir->confirm('Would you like to create settings form?', TRUE)) {
       $assets->addFile('{machine_name}/src/Form/{machine_name|camelize}SettingsForm.php')
       ->template('SettingsForm.php.twig');
@@ -88,7 +87,7 @@ final class TripalExtensionModuleGenerator extends BaseGenerator implements Cont
       $assets->addFile('{machine_name}/{machine_name}.links.menu.yml')
       ->template('module.links.menu.twig');
     }
-    
+
     $assets->addFile('{machine_name}/{machine_name}.info.yml', 'module.info.yml.twig');
 
     if ($vars['controller'] || $vars['form']) {
