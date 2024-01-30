@@ -7,22 +7,47 @@
 
 /**
  * Implements hook_install().
+ *
+ * Use this function for all tasks which need to be executed when this module
+ * is installed. We suggest submitting Tripal jobs to complete any longer tasks
+ * such as importing an ontology.
  */
 function {{ machine_name }}_install() {
-  \Drupal::messenger()->addStatus(__FUNCTION__);
+
+  // Uncomment the following code to add a Drupal status message
+  // showing when this function is called.
+  // \Drupal::messenger()->addStatus(__FUNCTION__);
 }
 
 /**
  * Implements hook_uninstall().
+ *
+ * Use this method for all tasks which need to be executed when this module is
+ * uninstalled. We DO NOT suggest deleting any terms or data added to Chado
+ * by this module on uninstall.
  */
 function {{ machine_name }}_uninstall() {
-  \Drupal::messenger()->addStatus(__FUNCTION__);
+  // Uncomment the following code to add a Drupal status message
+  // showing when this function is called.
+  // \Drupal::messenger()->addStatus(__FUNCTION__);
 }
 
 /**
  * Implements hook_schema().
+ *
+ * Use the Drupal Schema API to define any database tables you want created
+ * in the DRUPAL Schema. Do Not use this to create Tripal/Chado Custom tables
+ * or Materialized Views.
+ *
+ * @see https://www.drupal.org/docs/7/api/schema-api/schema-reference
  */
 function {{ machine_name }}_schema() {
+  $schema = [];
+
+  // Uncomment the following code example to create the {{ machine_name }}_example
+  // table in the Drupal Schema. The {{ machine_name }}_example table has
+  // id, uid, status, type created, and data columns, where the primary key is the id.
+  /* @code-sample
   $schema['{{ machine_name }}_example'] = [
     'description' => 'Table description.',
     'fields' => [
@@ -73,16 +98,25 @@ function {{ machine_name }}_schema() {
       'status' => ['status'],
     ],
   ];
+  */
 
   return $schema;
 }
 
 /**
  * Implements hook_requirements().
+ *
+ * Use this function to define specific requirements for your module.
+ * If the severity key is set to warning or error then your module will
+ * not be able to be installed.
  */
 function {{ machine_name }}_requirements($phase) {
   $requirements = [];
 
+  // This example requirement is only run when checking requirements
+  // through the UI. It simply generates a random number between 1-100
+  // and produces a warning if it's above 50. This should show up on the
+  // Drupal Report Status page.
   if ($phase == 'runtime') {
     $value = mt_rand(0, 100);
     $requirements['{{ machine_name }}_status'] = [

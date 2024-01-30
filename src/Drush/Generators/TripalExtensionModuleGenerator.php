@@ -55,11 +55,11 @@ final class TripalExtensionModuleGenerator extends BaseGenerator implements Cont
 
     $vars['class_prefix'] = '{machine_name|camelize}';
 
-    if ($ir->confirm('Would you like to create module file?', TRUE)) {
+    if ($ir->confirm('Would you like to create the module file?', TRUE)) {
       $assets->addFile('{machine_name}/{machine_name}.module', 'module.module.twig');
     }
 
-    if ($ir->confirm('Would you like to create install file?', TRUE)) {
+    if ($ir->confirm('Would you like to create install file (install tasks + creating tables)?', FALSE)) {
       $assets->addFile('{machine_name}/{machine_name}.install', 'module.install.twig');
     }
 
