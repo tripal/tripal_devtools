@@ -31,7 +31,7 @@ class {{ machine_name|camelize }}SettingsForm extends ConfigFormBase {
     $form['example'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Example'),
-      '#prefix' => $this->t('Please type the word "example".'),
+      '#description' => $this->t('Please type the word "example".'),
       '#default_value' => $this->config('{{ machine_name }}.settings')->get('example'),
     ];
     return parent::buildForm($form, $form_state);
@@ -42,7 +42,7 @@ class {{ machine_name|camelize }}SettingsForm extends ConfigFormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     if ($form_state->getValue('example') != 'example') {
-      $form_state->setErrorByName('example', $this->t('The value is not correct.'));
+      $form_state->setErrorByName('example', $this->t('The value is not correct. Instead enter "example" to get validation to pass.'));
     }
     parent::validateForm($form, $form_state);
   }
@@ -51,9 +51,13 @@ class {{ machine_name|camelize }}SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+
+    $value = $form_state->getValue('example');
     $this->config('{{ machine_name }}.settings')
-      ->set('example', $form_state->getValue('example'))
+      ->set('example', $value)
       ->save();
+    $this->messenger()->addStatus("Setting the value of {{ machine_name }}.settings.example to $value.");
+
     parent::submitForm($form, $form_state);
   }
 
