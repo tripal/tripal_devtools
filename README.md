@@ -50,6 +50,7 @@ The following commands are currently implemented:
 | tripal-chado:field-formatter | Generates a Chado Formatter to be used with an existing Chado Field. |
 | tripal-chado:field-type      | Generates a Chado Field Type for developing fields which store their data in chado. |
 | tripal-chado:field-widget    | Generates a Chado Field Widget to be used with an existing Chado Field. |
+| tripal:extension-module      | Generates a Tripal Extension module and its associated files. |
 
 #### Usage:
 
