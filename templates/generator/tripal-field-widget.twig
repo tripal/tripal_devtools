@@ -1,23 +1,24 @@
-<?php declare(strict_types = 1);
+<?php
 
 namespace Drupal\{{ machine_name }}\Plugin\Field\FieldWidget;
 
-use Drupal\tripal\TripalField\TripalWidgetBase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\tripal\TripalField\Attribute\TripalFieldWidget;
+use Drupal\tripal\TripalField\TripalWidgetBase;
 
 /**
- * Plugin implementation of the '{{ widget_id }}' field widget for '{{ field_id }}'.
- *
- * @FieldWidget(
- *   id = "{{ widget_id }}",
- *   label = @Translation("{{ widget_label }}"),
- *   description = @Translation("{{ widget_description }}"),
- *   field_types = {
- *     "{{ field_id }}"
- *   }
- * )
+ * Plugin implementation of the '{{ widget_label }}' field widget.
  */
+#[TripalFieldWidget(
+  id: '{{ widget_id }}',
+  label: new TranslatableMarkup('{{ widget_label }}'),
+  description: new TranslatableMarkup('{{ widget_description }}'),
+  field_types: [
+    '{{ field_id }}',
+  ],
+)]
 class {{ widget_class }} extends TripalWidgetBase {
 
   /**
@@ -31,6 +32,8 @@ class {{ widget_class }} extends TripalWidgetBase {
     $element['value'] = $element + [
       '#type' => 'textfield',
       '#default_value' => $items[$delta]->value ?? '',
+      '#placeholder' => $this->getSetting('placeholder'),
+      '#maxlength' => $this->getFieldSetting('max_length'),
       '#attributes' => ['class' => ['js-text-full', 'text-full']],
     ];
 
@@ -38,4 +41,3 @@ class {{ widget_class }} extends TripalWidgetBase {
   }
 
 }
-
