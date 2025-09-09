@@ -2,6 +2,7 @@
 
 namespace Drupal\{{ machine_name }}\Plugin\Field\FieldType;
 
+use Drupal\Component\Utility\Random;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -73,7 +74,7 @@ class {{ field_class }} extends TripalFieldItemBase {
      * @endcode
      */
 
-    return $elements + parent::storageSettingsForm($form,$form_state,$has_data);
+    return $elements + parent::storageSettingsForm($form, $form_state, $has_data);
   }
 
   /**
@@ -104,11 +105,12 @@ class {{ field_class }} extends TripalFieldItemBase {
     $values = [];
 
     // Use something like the following to retrieve storage settings.
-    // $field_definition->getSetting('max_length')
+    // $max_length = $field_definition->getSetting('max_length')
+    $max_length = 100;
 
     // Generate a random value to use as a sample.
-    $random = new \Drupal\Component\Utility\Random();
-    $values['value'] = $random->word(mt_rand(1, 100));
+    $random = new Random();
+    $values['value'] = $random->word(mt_rand(1, $max_length));
 
     return $values;
   }
@@ -143,4 +145,5 @@ class {{ field_class }} extends TripalFieldItemBase {
 
     return $constraints;
   }
+
 }
