@@ -5,7 +5,7 @@ Provides tools to make development of Tripal extension modules easier!
 ## Requirements
 
  - Tripal 4.x
- - Drush 12+
+ - Drush 13.6+
  - PHP 8.2+
 
 ## Usage
@@ -17,20 +17,28 @@ composer.
 
 ### Docker Setup
 
-If you are using TripalDocker to develop your extension module, then ensure that when creating the container using docker run you mount your local copy of your module code inside the docker.
+If you are using TripalDocker to develop your extension module, then
 
-For example, if your module is called `my_module` and your current working directory contains your local copy of this module, then your run command would be:
+1. Build a TripalDocker designed to develop your module and mount the directory your module in in to your local hard drive.
 
-```
-docker run --publish=80:80 --name=CONTAINERNAME -tid \
-  --volume=$(pwd):/var/www/drupal/web/modules/contrib/my_module tripalproject/tripaldocker-devtools:latest
-docker exec CONTAINERNAME service postgresql restart
-```
+   For example, if your module is called `my_module` and your current working directory contains your local copy of this module, then your run command would be:
+ 
+   ```
+   docker run --publish=80:80 --name=CONTAINERNAME -tid \
+     --volume=$(pwd):/var/www/drupal/web/modules/contrib/my_module tripalproject/tripaldocker:latest
+   ```
+
+   NOTE: If you are just starting, then your local folder can contain nothing and you can use this module to generate the initial files!
+
+2. Install this module inside your docker container using the following command:
+
+   ```
+   docker exec --workdir=/var/www/drupal CONTAINERNAME composer require tripal/tripal_devtools
+   ```
 
 ### Local installation
 
 See the Dockerfile in this repository for commands.
-
 
 ## Tools
 
