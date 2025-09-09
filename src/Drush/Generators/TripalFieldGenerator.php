@@ -15,7 +15,7 @@ use DrupalCodeGenerator\Utils;
 #[Generator(
   name: 'tripal:field',
   description: 'Generates a Tripal Field Type, Widget and Formatter for fields not interacting with Chado.',
-  templatePath: __DIR__ . '/../../../templates/generator',
+  templatePath: __DIR__ . '/../../../templates/generator/tripal_field',
   type: GeneratorType::MODULE_COMPONENT,
 )]
 final class TripalFieldGenerator extends BaseGenerator {

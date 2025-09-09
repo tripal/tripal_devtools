@@ -15,7 +15,7 @@ use DrupalCodeGenerator\Validator\RegExp;
 #[Generator(
   name: 'tripal:field-type',
   description: 'Generates a Tripal Field Type for developing Tripal fields with no interactiion with Chado.',
-  templatePath: __DIR__ . '/../../../templates/generator',
+  templatePath: __DIR__ . '/../../../templates/generator/tripal_field',
   type: GeneratorType::MODULE_COMPONENT,
 )]
 final class TripalFieldTypeGenerator extends BaseGenerator {

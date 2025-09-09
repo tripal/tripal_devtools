@@ -15,7 +15,7 @@ use DrupalCodeGenerator\Utils;
 #[Generator(
   name: 'tripal:field-widget',
   description: 'Generates a Tripal Widget to be used with an existing Tripal Field.',
-  templatePath: __DIR__ . '/../../../templates/generator',
+  templatePath: __DIR__ . '/../../../templates/generator/tripal_field',
   type: GeneratorType::MODULE_COMPONENT,
 )]
 final class TripalFieldWidgetGenerator extends BaseGenerator {

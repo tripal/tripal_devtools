@@ -15,7 +15,7 @@ use DrupalCodeGenerator\Utils;
 #[Generator(
   name: 'tripal:field-formatter',
   description: 'Generates a Tripal Formatter to be used with an existing Tripal Field.',
-  templatePath: __DIR__ . '/../../../templates/generator',
+  templatePath: __DIR__ . '/../../../templates/generator/tripal_field',
   type: GeneratorType::MODULE_COMPONENT,
 )]
 final class TripalFieldFormatterGenerator extends BaseGenerator {
