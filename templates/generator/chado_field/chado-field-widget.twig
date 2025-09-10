@@ -29,12 +29,18 @@ class {{ widget_class }} extends ChadoWidgetBase {
     // Grab the values for our properties based on the passed in delta.
     // For fields with a cardinality above 1, this is called one per record
     // with the delta indicating the current record.
-    // $item_vals = $items[$delta]->getValue();
+    $item_vals = $items[$delta]->getValue();
 
     // Define your form elements here.
     $element['value'] = [
       '#type' => 'textfield',
-      '#default_value' => $item_vals['value'] ?? 0,
+      '#default_value' => $item_vals['value'] ?? '',
+    ];
+
+    // You can define extra elements that are not saved in chado as well.
+    $element['suffix'] = [
+      '#type' => 'textfield',
+      '#default_value' => $item_vals['suffix'] ?? '',
     ];
 
     return $element;
@@ -50,7 +56,9 @@ class {{ widget_class }} extends ChadoWidgetBase {
     // the backend storage. For example, if you had a second element in the
     // widget that indicated the suffix to attach to the value you could
     // add it like this assuming a cardinality: 1.
-    // $values[0]['value] = $values[0]['value'] . $form_state->getValue('suffix');
+    $values[0]['value'] = $values[0]['value'] . ' ' . $values[0]['suffix'];
+
     return $values;
   }
+
 }
