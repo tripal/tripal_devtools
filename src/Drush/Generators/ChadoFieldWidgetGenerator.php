@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php
 
 namespace Drupal\tripal_devtools\Drush\Generators;
 
@@ -7,13 +7,15 @@ use DrupalCodeGenerator\Attribute\Generator;
 use DrupalCodeGenerator\Command\BaseGenerator;
 use DrupalCodeGenerator\GeneratorType;
 use DrupalCodeGenerator\Validator\RegExp;
-use DrupalCodeGenerator\Validator\Required;
 use DrupalCodeGenerator\Utils;
 
+/**
+ * Generates a Chado Widget class.
+ */
 #[Generator(
   name: 'tripal-chado:field-widget',
   description: 'Generates a Chado Field Widget to be used with an existing Chado Field.',
-  templatePath: __DIR__ . '/../../../templates/generator',
+  templatePath: __DIR__ . '/../../../templates/generator/chado_field',
   type: GeneratorType::MODULE_COMPONENT,
 )]
 final class ChadoFieldWidgetGenerator extends BaseGenerator {
@@ -24,14 +26,14 @@ final class ChadoFieldWidgetGenerator extends BaseGenerator {
   protected function generate(array &$vars, Assets $assets): void {
     $prompt = $this->createInterviewer($vars);
 
-    // Module Machine Name
+    // Module Machine Name.
     $vars['machine_name'] = $prompt->askMachineName();
 
-    // Validators
+    // Validators.
     $id_validator = new RegExp('/^[a-z][a-z0-9_]*[a-z0-9]$/', 'The value must consist of only lower case alphanumeric characters and underscores. It should start with a letter and not end with an underscore.');
     $label_validator = new RegExp('/^[a-zA-Z][a-zA-Z0-9- ]*[a-zA-Z0-9]$/', 'The value must be alphanumeric. We suggest focusing on a title-case human-readable name for your field.');
 
-    // Field Widget
+    // Field Widget.
     $vars['widget_id'] = $prompt->ask('Field Widget ID', 'chado_example_widget', $id_validator);
     $vars['widget_label'] = $prompt->ask('Field Widget Label', Utils::machine2human($vars['widget_id'], TRUE), $label_validator);
     $vars['widget_description'] = $prompt->ask('Field Widget Description');

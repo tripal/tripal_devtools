@@ -1,12 +1,15 @@
-ARG drupalversion='10.1.x-dev'
-ARG phpversion='8.2'
-FROM tripalproject/tripaldocker:drupal${drupalversion}-php${phpversion}-pgsql13-noChado
+ARG drupalversion='11.x-dev'
+ARG phpversion='8.3'
+ARG postgresqlversion='17'
+FROM tripalproject/tripaldocker:drupal${drupalversion}-php${phpversion}-pgsql${postgresqlversion}-noChado
 
 ## Ensures that we don't make assumptions about the name of Chado
 ## And sets us up to test multiple Chado instances.
-ARG chadoschema='chado1'
+ARG chadoschema='teapot'
 
-WORKDIR /var/www/drupal9/web
+WORKDIR /var/www/drupal/web
+
+COPY ./ /var/www/drupal/web/modules/contrib/tripal_devtools
 
 ## Install and Prepare Chado with the name set above.
 RUN service postgresql restart \
@@ -16,6 +19,5 @@ RUN service postgresql restart \
 
 ## Install and Enable Tripal DevTools
 RUN service postgresql restart \
-  && composer require --dev --working-dir=/var/www/drupal9 \
-          tripal/tripal:4.x-dev tripal/tripal_devtools \
-  && drush en tripal_devtools --yes
+  && drush en tripal_devtools --yes \
+  && service postgresql stop

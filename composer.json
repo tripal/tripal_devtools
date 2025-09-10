@@ -18,8 +18,8 @@
   ],
   "require": {
     "php": "^8.2",
-    "drupal/core": "^10.0",
-    "drush/drush": "^12.1",
+    "drupal/core": "^10.4 || ^11.1",
+    "drush/drush": "^13.6",
     "tripal/tripal": "^4.0-alpha1"
   }
 }
