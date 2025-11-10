@@ -61,11 +61,13 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
     $module_workflow = $module_path . DIRECTORY_SEPARATOR . self::WORKFLOW_DIR;
     if (is_dir($module_workflow)) {
       $assets = array_diff(scandir($module_workflow), ['.', '..']);
+
       $sample = array_filter($assets, function ($a) {
         return strpos($a, 'MAIN-phpunit') !== FALSE;
       });
 
-      $conv = str_contains(current($sample), 'Grid') ? 'grid' : 'version';
+      $conv = str_contains(strtolower(current($sample)), 'grid') ? 'grid' : 'version';
+
     }
 
     // Confirm removal of existing grid.
@@ -82,39 +84,44 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
       foreach ($php_stack as $include_php) {
         foreach ($drupal_stack as $include_drupal) {
           foreach ($pgsql_stack as $include_pgsql) {
-            $matrix[$include_php . $include_drupal . $include_pgsql] = [
-              $include_php,
-              $include_drupal,
-              $include_pgsql,
-            ];
+            $matrix[$include_php][$include_drupal][] = $include_pgsql;
           }
         }
       }
 
       foreach ($strategy_matrix['exclude'] as $exclude) {
-        $key = $exclude[self::WORKFLOW_VER_KEY['php']] . $exclude[self::WORKFLOW_VER_KEY['drupal']];
+        $php = $exclude[self::WORKFLOW_VER_KEY['php']];
+        $drupal = $exclude[self::WORKFLOW_VER_KEY['drupal']];
+        $pgsql = $exclude[self::WORKFLOW_VER_KEY['pgsql']] ?? 0;
 
-        if (isset($exclude[self::WORKFLOW_VER_KEY['pgsql']])) {
-          unset($matrix[$key . $exclude[self::WORKFLOW_VER_KEY['pgsql']]]);
-        }
-        else {
-          foreach ($pgsql_stack as $pgsql_ver) {
-            if (isset($matrix[$key . $pgsql_ver])) {
-              unset($matrix[$key . $pgsql_ver]);
-            }
+        if (isset($matrix[$php]) && isset($matrix[$php][$drupal])) {
+          if (isset($exclude[$pgsql])) {
+            unset($matrix[$php][$drupal][$pgsql]);
+          }
+          else {
+            unset($matrix[$php][$drupal]);
           }
         }
       }
+    }
 
-      $i = 1;
-      foreach ($matrix as $workflow) {
-        $filename = ($conv == 'grid')
-          ? 'MAIN-phpunit-Grid' . $i . chr(65 + (int) ($i - 1)) . '.yml'
-          : 'MAIN-phpunit-php' . $workflow[0] . '_D' . $workflow[1] . '.yml';
+    $seq_num = 1;
+    foreach ($matrix as $php_ver => $workflow) {
+      $seq_char = 0;
+
+      foreach ($workflow as $drupal_ver => $_) {
+        if ($conv == 'grid') {
+          $filename = 'MAIN-phpunit-Grid' . $seq_num . chr(65 + (int) $seq_char) . '.yml';
+          $seq_char++;
+        }
+        else {
+          $filename = 'MAIN-phpunit-php' . $php_ver . '_D' . $drupal_ver . '.yml';
+        }
 
         file_put_contents($module_workflow . DIRECTORY_SEPARATOR . 'TEMP' . $filename, 'ABC');
-        $i++;
       }
+
+      $seq_num++;
     }
   }
 
