@@ -68,9 +68,24 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
       throw new \Exception('Module does not exist.');
     }
 
-    $workflow_dir = $this->module->getPath() . DIRECTORY_SEPARATOR . self::WORKFLOW_DIR;
+    $dir_path = $this->module->getPath();
+    if ($vars['machine_name'] == 'tripal') {
+      $dir_path = dirname($dir_path);
+    }
+
+    $workflow_dir = $dir_path . DIRECTORY_SEPARATOR . self::WORKFLOW_DIR;
+
     if (!is_dir($workflow_dir)) {
-      throw new \Exception('Failed to load workflow directory.');
+      $new_workflow_dir = preg_replace('/' . $vars['machine_name'] . '$/', $workflow_dir);
+
+      $workflow_dir = $new_workflow_dir . DIRECTORY_SEPARATOR . self::WORKFLOW_DIR;
+      if (!is_dir($workflow_dir)) {
+        throw new \Exception('Failed to load workflow directory.');
+      }
+    }
+
+    if (!file_exists($workflow_dir . DIRECTORY_SEPARATOR . self::WORKFLOW_FILE)) {
+      throw new \Exception('Failed to load workflow ALL PHP Unit YML.');
     }
 
     // Confirm removal of existing workflow files.
@@ -112,7 +127,7 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
       // Create workflow grid file.
       $filename_scheme = 'MAIN-phpunit-%s.yml';
 
-      $grid_header = ['PHP/Drupal'] + $strategy_matrix[self::WORKFLOW_VERSION['drupal']];
+      $grid_header = array_merge(['PHP\Drupal'], $strategy_matrix[self::WORKFLOW_VERSION['drupal']]);
       $grid_rows = [];
 
       $seq_num = 1;
@@ -148,16 +163,18 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
 
       // Output the grid.
       // @see symfony.com/doc/current/components/console/helpers/table.html
-      $this->io()->writeln('Copy and paste table grid below into README file.');
+      $this->io()->writeln("\n Copy and paste table grid below into README file. \n");
       $table_grid = new Table($this->io()->getOutput());
       $table_grid
         ->setHeaders($grid_header)
         ->setRows($grid_rows)
         ->render();
+      $this->io()->writeln("\n");
     }
-
-    // Existed the command.
-    $this->io()->writeln('Exited workflow grid generator.');
+    else {
+      // Existed the command.
+      $this->io()->writeln('Exited workflow grid generator.');
+    }
   }
 
   /**
