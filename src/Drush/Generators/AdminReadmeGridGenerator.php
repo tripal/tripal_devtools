@@ -149,9 +149,18 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
             $seq_char++;
           }
 
+          $workflow_file_config = $this->composeWorkflowFileConfig(
+            $php,
+            $drupal, max($pgsql),
+            [
+              'branches' => 'g0.88-updateTestingMatrix',
+              'uses' => 'g0.88-updateTestingMatrix',
+            ],
+          );
+
           file_put_contents(
             $workflow_dir . DIRECTORY_SEPARATOR . $filename,
-            $this->composeWorkflowFileConfig($php, $drupal, max($pgsql))
+            $workflow_file_config
           );
 
           $row[$drupal] = '![Grid' . $grid . '-Badge]';
@@ -186,14 +195,13 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
    *   The version of Drupal.
    * @param string $pgsql
    *   The version of PostgreSQL.
+   * @param array $options
+   *   Additional values passed to workflow configuration.
    *
    * @return string
    *   Workflow grid YML configuration.
    */
-  public function composeWorkflowFileConfig(string $php, string $drupal, string $pgsql): string {
-
-    $branches = 'g0.88-updateTestingMatrix';
-    $uses = 'g0.88-updateTestingMatrix';
+  public function composeWorkflowFileConfig(string $php, string $drupal, string $pgsql, array $options): string {
 
     $module_name = $this->module->getName();
     $module_base = basename($this->module->getPath());
@@ -204,7 +212,7 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
       push:
         branches:
           - 4.x
-          - {$branches}
+          - {$options['branches']}
       workflow_dispatch:
       schedule:
         - cron: '0 4 * * *'
@@ -216,7 +224,7 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
           - name: Checkout Repository
             uses: actions/checkout@v4
           - name: Run Automated testing
-            uses: {$uses}
+            uses: {$options['uses']}
             with:
               directory-name: '{$module_base}'
               modules: '{$module_name}'
