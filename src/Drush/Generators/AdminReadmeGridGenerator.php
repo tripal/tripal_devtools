@@ -212,6 +212,11 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
             $filename ?? '',
             'badge.svg'
           ]);
+
+          $assets->addFile(
+            $module_path . DIRECTORY_SEPARATOR . self::WORKFLOW_DIR . DIRECTORY_SEPARATOR . $filename,
+            'readme-grid-workflow.twig'
+          );
         }
 
         $grid_rows['grid'][] = $row;
