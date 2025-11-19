@@ -1,0 +1,29 @@
+name: 'PHPUnit'
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '4.x'
+      - '{{ branches }}'
+  schedule:
+    - cron: '0 6 * * *'
+
+permissions: read-all
+
+jobs:
+  running-tests:
+    name: 'PHP {{ php }} : Drupal {{ drupal }}'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Checkout Repository'
+        uses: 'actions/checkout@v4'
+      - name: 'Run Automated testing'
+        uses: '{{ test_actions }}'
+        with:
+          directory-name: {{ module_directory_name }}
+          modules: {{ apply_module }}
+          php-version: {{ php }}
+          drupal-version: {{ drupal }}
+          pgsql-version: {{ pgsql }}
+          build-image: true

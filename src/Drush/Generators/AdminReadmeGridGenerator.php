@@ -10,6 +10,8 @@ use DrupalCodeGenerator\Command\BaseGenerator;
 use DrupalCodeGenerator\GeneratorType;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Console\Helper\QuestionHelper;
+use Symfony\Component\Console\Question\ChoiceQuestion;
 
 /**
  * Generate README grid.
@@ -17,17 +19,17 @@ use Symfony\Component\Yaml\Yaml;
 #[Generator(
   name: 'tripal-admin:readme-grid',
   description: 'Generates the Drupal by PHP version compatibility grid for the README and associated GitHub workflow files.',
-  templatePath: __DIR__ . '/../../../templates/generator/admin',
+  templatePath: __DIR__ . '/../../../templates/generator/tripal_admin',
   type: GeneratorType::MODULE_COMPONENT,
 )]
 final class AdminReadmeGridGenerator extends BaseGenerator {
 
   /**
-   * The module to work on.
+   * The test action to use.
    *
-   * @var Module Handler object
+   * @var string
    */
-  private $module;
+  private const WORKFLOW_ACTION = 'tripal/test-tripal-action@v1.7';
 
   /**
    * The main workflow file.
@@ -62,180 +64,192 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
     $ir = $this->createInterviewer($vars);
     $vars['machine_name'] = $ir->askMachineName();
 
-    $this->module = \Drupal::service('module_handler')
+    $module = \Drupal::service('module_handler')
       ->getModule($vars['machine_name']);
-    if (!$this->module) {
+    if (!$module) {
       throw new \Exception('Module does not exist.');
     }
 
-    $dir_path = $this->module->getPath();
-    if ($vars['machine_name'] == 'tripal') {
-      $dir_path = dirname($dir_path);
+    $phpunit_yml = '%s' . DIRECTORY_SEPARATOR . self::WORKFLOW_DIR . DIRECTORY_SEPARATOR . self::WORKFLOW_FILE;
+
+    $module_path = $module->getPath();
+    $module_phpunit = sprintf($phpunit_yml, $module_path);
+
+    $is_package = FALSE;
+
+    if (!file_exists($module_phpunit)) {
+      // No workflow file asset in the module directory. Move one directory
+      // level up as it may likely be a package module.
+      $module_path = dirname($module_path, $one_level_up = 1);
+      $module_phpunit = sprintf($phpunit_yml, $module_path);
+
+      if (!file_exists($module_phpunit)) {
+        throw new \Exception('Failed to load the phpunit YML file of the module.');
+      }
+
+      $is_package = TRUE;
     }
 
-    $workflow_dir = $dir_path . DIRECTORY_SEPARATOR . self::WORKFLOW_DIR;
+    $vars['module_apply'][] = $module->getName();
 
-    if (!is_dir($workflow_dir)) {
-      $new_workflow_dir = preg_replace('/' . $vars['machine_name'] . '$/', $workflow_dir);
+    if ($is_package) {
+      $sub_modules = [];
 
-      $workflow_dir = $new_workflow_dir . DIRECTORY_SEPARATOR . self::WORKFLOW_DIR;
-      if (!is_dir($workflow_dir)) {
-        throw new \Exception('Failed to load workflow directory.');
+      foreach (scandir($module_path) as $sub_module) {
+        $sub_dir = $module_path . DIRECTORY_SEPARATOR . $sub_module;
+
+        // Exclude the module name entered in the beginning prompts.
+        if (is_dir($sub_dir) && !in_array($sub_module, ['.', '..', $module->getName()])) {
+
+          // Only directory with .info.yml (a module).
+          foreach (scandir($sub_dir) as $file) {
+            if (str_contains($file, '.info.yml')) {
+              array_push($sub_modules, $sub_module);
+              break;
+            }
+          }
+        }
+      }
+
+      // Prompt to ask which sub-modules the workflow apply.
+      $apply_all = $ir->confirm('The package module (Repository) has sub-modules. Apply workflow to all [' . implode(', ', $sub_modules) . '] (Yes) or select from list (No)', TRUE);
+
+      foreach ($sub_modules as $sub_module) {
+        $apply_to = '';
+
+        if ($apply_all) {
+          $apply_to = $sub_module;
+        }
+        else {
+          if ($ir->confirm('Apply workflow to sub-module: ' . $sub_module . '?', TRUE)) {
+            $apply_to = $sub_module;
+          }
+        }
+
+        if ($apply_to) {
+          $vars['module_apply'][] = $sub_module;
+        }
       }
     }
 
-    if (!file_exists($workflow_dir . DIRECTORY_SEPARATOR . self::WORKFLOW_FILE)) {
-      throw new \Exception('Failed to load workflow ALL PHP Unit YML.');
-    }
-
     // Confirm removal of existing workflow files.
-    if ($ir->confirm('Delete existing workflow files before running this command.')) {
+    if ($ir->confirm('Delete existing workflow files before running this command.', TRUE)) {
 
-      $parse_build = Yaml::parseFile($workflow_dir . DIRECTORY_SEPARATOR . self::WORKFLOW_FILE);
+      $parse_build = Yaml::parseFile($module_phpunit);
+
       $strategy_matrix = $parse_build['jobs']['run-tests']['strategy']['matrix'];
       if (empty($strategy_matrix)) {
         throw new \Exception('Failed to load workflow strategy matrix information.');
       }
 
-      $stack_matrix = [];
+      $webserver_stack = [];
 
-      // Create full technology stack.
+      // Create full tech stack.
       foreach ($strategy_matrix[self::WORKFLOW_VERSION['php']] as $php) {
         foreach ($strategy_matrix[self::WORKFLOW_VERSION['drupal']] as $drupal) {
           foreach ($strategy_matrix[self::WORKFLOW_VERSION['pgsql']] as $pgsql) {
-            $stack_matrix[$php][$drupal][] = $pgsql;
+            $webserver_stack[$php][$drupal][] = $pgsql;
           }
         }
       }
 
-      // Apply technology stack exclusions.
+      // Apply tech stack exclusion.
+      $vars['exclusion_note'] = [];
+
       foreach ($strategy_matrix['exclude'] as $exclude) {
-        $php = $exclude[self::WORKFLOW_VERSION['php']];
+        $php = $exclude[self::WORKFLOW_VERSION['php']] ?? 0;
         $drupal = $exclude[self::WORKFLOW_VERSION['drupal']];
+
+        if (!$php) {
+          // Short hand instruction without PHP, will exclude all Drupal version
+          // for every PHP version in the strategy.
+
+          foreach ($strategy_matrix[self::WORKFLOW_VERSION['php']] as $php) {
+            foreach ($strategy_matrix[self::WORKFLOW_VERSION['pgsql']] as $pgsql) {
+              unset($webserver_stack[$php][$drupal][$pgsql]);
+            }
+
+            $vars['exclusion_note'][] = '## PHP ' . $php . ' - Drupal ' . $drupal;
+          }
+
+          continue;
+        }
+
         $pgsql = $exclude[self::WORKFLOW_VERSION['pgsql']] ?? 0;
 
-        if (isset($stack_matrix[$php]) && isset($stack_matrix[$php][$drupal])) {
+        if (isset($webserver_stack[$php]) && isset($webserver_stack[$php][$drupal])) {
           if (isset($exclude[$pgsql])) {
-            unset($stack_matrix[$php][$drupal][$pgsql]);
+            unset($webserver_stack[$php][$drupal][$pgsql]);
           }
           else {
-            unset($stack_matrix[$php][$drupal]);
+            unset($webserver_stack[$php][$drupal]);
           }
         }
       }
 
       // Create workflow grid file.
-      $filename_scheme = 'MAIN-phpunit-%s.yml';
-
       $grid_header = array_merge(['PHP\Drupal'], $strategy_matrix[self::WORKFLOW_VERSION['drupal']]);
       $grid_rows = [];
 
-      $seq_num = 1;
-      foreach ($stack_matrix as $php => $workflow) {
+      foreach ($webserver_stack as $php => $workflow) {
         $row = [];
+        $badge = [];
+
         $row[$grid_header[0]] = '**PHP' . $php . '**';
 
-        $seq_char = 0;
         foreach ($workflow as $drupal => $pgsql) {
-          if ($this->module->getName() == 'tripal') {
             // Php PHP VER _D DRUPAL VER (ie. php8.1_D10.4.x-dev).
-            $grid = str_replace('.', '', $php) . '-' . str_replace(['.', 'x-dev'], '', $drupal);
-            $filename = sprintf($filename_scheme, 'php' . $php . '_D' . $drupal);
-          }
-          else {
-            // Grid SEQUENCE # SEQUENCE CHAR A-Z (ie. Grid1A).
-            $grid = $seq_num . chr(65 + (int) $seq_char);
-            $filename = sprintf($filename_scheme, $grid);
-            $seq_char++;
-          }
+          $grid = '[Grid' . str_replace('.', '', $php) . '-' . str_replace(['.', 'x-dev'], '', $drupal) . '-Badge]';
+          $filename = sprintf('MAIN-phpunit-%s.yml', 'php' . $php . '_D' . $drupal);
 
-          $workflow_file_config = $this->composeWorkflowFileConfig(
-            $php,
-            $drupal, max($pgsql),
-            [
-              'branches' => 'g0.88-updateTestingMatrix',
-              'uses' => 'g0.88-updateTestingMatrix',
-            ],
-          );
-
-          file_put_contents(
-            $workflow_dir . DIRECTORY_SEPARATOR . $filename,
-            $workflow_file_config
-          );
-
-          $row[$drupal] = '![Grid' . $grid . '-Badge]';
+          $row[$drupal] = '!' . $grid;
+          $badge[$drupal] = $grid . ' : ' . implode(DIRECTORY_SEPARATOR, [
+            'https://github.com',
+            $module->getName(),
+            $module->getName(),
+            'actions',
+            'workflows',
+            $filename ?? '',
+            'badge.svg'
+          ]);
         }
 
-        $grid_rows[] = $row;
-        $seq_num++;
+        $grid_rows['grid'][] = $row;
+        $grid_rows['badge'][] = $badge;
       }
 
-      // Output the grid.
+      // Table grid.
       // @see symfony.com/doc/current/components/console/helpers/table.html
-      $this->io()->writeln("\n Copy and paste table grid below into README file. \n");
+      $this->io()->writeln(PHP_EOL . 'Copy and paste table grid below into README file.' . PHP_EOL);
       $table_grid = new Table($this->io()->getOutput());
       $table_grid
         ->setHeaders($grid_header)
-        ->setRows($grid_rows)
+        ->setRows($grid_rows['grid'])
         ->render();
-      $this->io()->writeln("\n");
+
+      // Exclusion notes.
+      if ($vars['exclusion_note']) {
+        $this->io()->writeln(PHP_EOL);
+        foreach ($vars['exclusion_note'] as $note) {
+          $this->io()->writeln($note . PHP_EOL);
+        }
+      }
+
+      // Grid badges.
+      $this->io()->writeln(PHP_EOL);
+      foreach ($grid_rows['badge'] as $rows) {
+        foreach ($rows as $badge) {
+          $this->io()->writeln($badge . PHP_EOL);
+        }
+      }
+
+      //
     }
     else {
-      // Existed the command.
       $this->io()->writeln('Exited workflow grid generator.');
     }
-  }
 
-  /**
-   * Create a workflow test job YML entries.
-   *
-   * @param string $php
-   *   The version of PHP.
-   * @param string $drupal
-   *   The version of Drupal.
-   * @param string $pgsql
-   *   The version of PostgreSQL.
-   * @param array $options
-   *   Additional values passed to workflow configuration.
-   *
-   * @return string
-   *   Workflow grid YML configuration.
-   */
-  public function composeWorkflowFileConfig(string $php, string $drupal, string $pgsql, array $options): string {
-
-    $module_name = $this->module->getName();
-    $module_base = basename($this->module->getPath());
-
-    $workflow_config = <<<WORKFLOW_CONFIG
-    name: PHPUnit
-    on:
-      push:
-        branches:
-          - 4.x
-          - {$options['branches']}
-      workflow_dispatch:
-      schedule:
-        - cron: '0 4 * * *'
-    jobs:
-      running-tests:
-        name: "Drupal {$drupal} - PHP {$php} - PostgreSQL {$pgsql}"
-        runs-on: ubuntu-latest
-        steps:
-          - name: Checkout Repository
-            uses: actions/checkout@v4
-          - name: Run Automated testing
-            uses: {$options['uses']}
-            with:
-              directory-name: '{$module_base}'
-              modules: '{$module_name}'
-              build-image: TRUE
-              dockerfile: 'Dockerfile'
-              php-version: '{$php}'
-              pgsql-version: '{$pgsql}'
-              drupal-version: '{$drupal}'
-    WORKFLOW_CONFIG;
-
-    return $workflow_config;
+    // Generate grid and workflow phpunit file.
   }
 
 }
