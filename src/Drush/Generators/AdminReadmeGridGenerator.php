@@ -10,8 +10,6 @@ use DrupalCodeGenerator\Command\BaseGenerator;
 use DrupalCodeGenerator\GeneratorType;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Yaml\Yaml;
-use Symfony\Component\Console\Helper\QuestionHelper;
-use Symfony\Component\Console\Question\ChoiceQuestion;
 
 /**
  * Generate README grid.
@@ -23,13 +21,6 @@ use Symfony\Component\Console\Question\ChoiceQuestion;
   type: GeneratorType::MODULE_COMPONENT,
 )]
 final class AdminReadmeGridGenerator extends BaseGenerator {
-
-  /**
-   * The test action to use.
-   *
-   * @var string
-   */
-  private const WORKFLOW_ACTION = 'tripal/test-tripal-action@v1.7';
 
   /**
    * The main workflow file.
@@ -57,15 +48,37 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
   ];
 
   /**
+   * Workflow configuration values.
+   *
+   * @var string
+   */
+  private const WORKFLOW_OPTION = [
+    'name' => 'PHPUnit',
+    'branch' => '4.x',
+    'branches' => 'tv4g0-issue2247-support-php-8.4',
+    'cron' => '0 6 * * *',
+    'checkout' => 'actions/checkout@v4',
+    'run' => 'tripal/test-tripal-action@v1.7',
+  ];
+
+  /**
+   * The workflow template file.
+   *
+   * @var string
+   */
+  private const WORKFLOW_TEMPLATE = 'readme-grid-workflow.twig';
+
+  /**
    * {@inheritdoc}
    */
   protected function generate(array &$vars, Assets $assets): void {
 
     $ir = $this->createInterviewer($vars);
-    $vars['machine_name'] = $ir->askMachineName();
+    $machine_name = $ir->askMachineName();
+    $vars['machine_name'] = $machine_name;
 
     $module = \Drupal::service('module_handler')
-      ->getModule($vars['machine_name']);
+      ->getModule($machine_name);
     if (!$module) {
       throw new \Exception('Module does not exist.');
     }
@@ -90,9 +103,17 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
       $is_package = TRUE;
     }
 
-    $vars['module_apply'][] = $module->getName();
+    $apply_module = [];
+    $apply_module[] = $module->getName();
 
     if ($is_package) {
+      // Confirm that it is a package.
+      $confirm_is_package = $ir->confirm('The module is a package, and the generator located the GitHub Workflow in the parent directory: ' . $module_path . ' and not in ' . $module->getPath() . '. Is the module a package?', TRUE);
+
+      if (!$confirm_is_package) {
+        throw new \Exception('Could not find the workflow directory. Ensure that you have setup the directory .github/workflows/ in the module path and retry the command.');
+      }
+
       $sub_modules = [];
 
       foreach (scandir($module_path) as $sub_module) {
@@ -127,7 +148,7 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
         }
 
         if ($apply_to) {
-          $vars['module_apply'][] = $sub_module;
+          $apply_module[] = $sub_module;
         }
       }
     }
@@ -154,7 +175,7 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
       }
 
       // Apply tech stack exclusion.
-      $vars['exclusion_note'] = [];
+      $exclusion_note = [];
 
       foreach ($strategy_matrix['exclude'] as $exclude) {
         $php = $exclude[self::WORKFLOW_VERSION['php']] ?? 0;
@@ -163,13 +184,12 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
         if (!$php) {
           // Short hand instruction without PHP, will exclude all Drupal version
           // for every PHP version in the strategy.
-
           foreach ($strategy_matrix[self::WORKFLOW_VERSION['php']] as $php) {
             foreach ($strategy_matrix[self::WORKFLOW_VERSION['pgsql']] as $pgsql) {
               unset($webserver_stack[$php][$drupal][$pgsql]);
             }
 
-            $vars['exclusion_note'][] = '## PHP ' . $php . ' - Drupal ' . $drupal;
+            $exclusion_note[] = '## PHP ' . $php . ' - Drupal ' . $drupal;
           }
 
           continue;
@@ -198,7 +218,7 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
         $row[$grid_header[0]] = '**PHP' . $php . '**';
 
         foreach ($workflow as $drupal => $pgsql) {
-            // Php PHP VER _D DRUPAL VER (ie. php8.1_D10.4.x-dev).
+          // Php PHP VER _D DRUPAL VER (ie. php8.1_D10.4.x-dev).
           $grid = '[Grid' . str_replace('.', '', $php) . '-' . str_replace(['.', 'x-dev'], '', $drupal) . '-Badge]';
           $filename = sprintf('MAIN-phpunit-%s.yml', 'php' . $php . '_D' . $drupal);
 
@@ -210,12 +230,28 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
             'actions',
             'workflows',
             $filename ?? '',
-            'badge.svg'
+            'badge.svg',
           ]);
 
+          $vars['module_directory_name'] = basename($module->getPath());
+          $vars['apply_module'] = implode(', ', $apply_module);
+
+          $vars['php'] = $php;
+          $vars['drupal'] = $drupal;
+          $vars['pgsql'] = max($pgsql);
+
+          $vars['branches'] = self::WORKFLOW_OPTION['branches'];
+          $vars['cron'] = self::WORKFLOW_OPTION['cron'];
+          $vars['checkout'] = self::WORKFLOW_OPTION['checkout'];
+          $vars['run'] = self::WORKFLOW_OPTION['run'];
+
+          if (!file_exists($this->getTemplatePath() . DIRECTORY_SEPARATOR . self::WORKFLOW_TEMPLATE)) {
+            throw new \Exception('Workflow template file does not exist.');
+          }
+
           $assets->addFile(
-            $module_path . DIRECTORY_SEPARATOR . self::WORKFLOW_DIR . DIRECTORY_SEPARATOR . $filename,
-            'readme-grid-workflow.twig'
+            (($is_package) ? '../' : '/') . self::WORKFLOW_DIR . DIRECTORY_SEPARATOR . $filename,
+            self::WORKFLOW_TEMPLATE
           );
         }
 
@@ -235,7 +271,7 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
       // Exclusion notes.
       if ($vars['exclusion_note']) {
         $this->io()->writeln(PHP_EOL);
-        foreach ($vars['exclusion_note'] as $note) {
+        foreach ($exclusion_note as $note) {
           $this->io()->writeln($note . PHP_EOL);
         }
       }
@@ -248,13 +284,12 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
         }
       }
 
-      //
+      // End confirm to continue.
     }
     else {
+
       $this->io()->writeln('Exited workflow grid generator.');
     }
-
-    // Generate grid and workflow phpunit file.
   }
 
 }

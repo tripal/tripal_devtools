@@ -1,29 +1,32 @@
-name: 'PHPUnit'
+{# Workflow Grid PHPUnit template file, saved in /.github/workflows/ of a module #}
+
+name: '{{ name }}'
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - '4.x'
+      - '{{ branch }}'
       - '{{ branches }}'
   schedule:
-    - cron: '0 6 * * *'
+    - cron: '{{ cron }}'
 
 permissions: read-all
 
 jobs:
   running-tests:
-    name: 'PHP {{ php }} : Drupal {{ drupal }}'
+    name: 'PHP {{ php }} - Drupal {{ drupal }} - PostgreSQL {{ pgsql }}'
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Checkout Repository'
-        uses: 'actions/checkout@v4'
+        uses: '{{ checkout }}'
       - name: 'Run Automated testing'
-        uses: '{{ test_actions }}'
+        uses: '{{ run }}'
         with:
-          directory-name: {{ module_directory_name }}
-          modules: {{ apply_module }}
-          php-version: {{ php }}
-          drupal-version: {{ drupal }}
-          pgsql-version: {{ pgsql }}
-          build-image: true
+          directory-name: '{{ module_directory_name }}'
+          modules: '{{ apply_module }}'
+          php-version: '{{ php }}'
+          drupal-version: '{{ drupal }}'
+          pgsql-version: '{{ pgsql }}'
+          build-image: TRUE
+          dockerfile: 'Dockerfile'
