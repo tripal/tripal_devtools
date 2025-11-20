@@ -50,13 +50,19 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
   /**
    * Workflow configuration values.
    *
+   * Each key corresponds to a config key in the template file.
+   * @see /templates/tripal_admin/readme-grid-workflow.twig
+   *
    * @var string
    */
   private const WORKFLOW_OPTION = [
     'name' => 'PHPUnit',
-    'branch' => '4.x',
-    'branches' => 'tv4g0-issue2247-support-php-8.4',
+    'branches' => [
+      '4.x',
+      'tv4g0-issue2247-support-php-8.4'
+    ],
     'cron' => '0 6 * * *',
+    'test' => 'running-tests',
     'checkout' => 'actions/checkout@v4',
     'run' => 'tripal/test-tripal-action@v1.7',
   ];
@@ -75,6 +81,8 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
 
     $ir = $this->createInterviewer($vars);
     $machine_name = $ir->askMachineName();
+
+    // Must have this key.
     $vars['machine_name'] = $machine_name;
 
     $module = \Drupal::service('module_handler')
@@ -211,11 +219,23 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
       $grid_header = array_merge(['PHP\Drupal'], $strategy_matrix[self::WORKFLOW_VERSION['drupal']]);
       $grid_rows = [];
 
+      // Setup workflow template static values.
+      $vars['module_directory_name'] = basename($module->getPath());
+      $vars['apply_module'] = implode(', ', $apply_module);
+
+      foreach (self::WORKFLOW_OPTION as $key => $value) {
+        $vars[$key] = $value;
+      }
+
       foreach ($webserver_stack as $php => $workflow) {
         $row = [];
         $badge = [];
 
         $row[$grid_header[0]] = '**PHP' . $php . '**';
+
+        $vars['php'] = '';
+        $vars['drupal'] = '';
+        $vars['pgsql'] = '';
 
         foreach ($workflow as $drupal => $pgsql) {
           // Php PHP VER _D DRUPAL VER (ie. php8.1_D10.4.x-dev).
@@ -229,21 +249,13 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
             $module->getName(),
             'actions',
             'workflows',
-            $filename ?? '',
+            $filename,
             'badge.svg',
           ]);
-
-          $vars['module_directory_name'] = basename($module->getPath());
-          $vars['apply_module'] = implode(', ', $apply_module);
 
           $vars['php'] = $php;
           $vars['drupal'] = $drupal;
           $vars['pgsql'] = max($pgsql);
-
-          $vars['branches'] = self::WORKFLOW_OPTION['branches'];
-          $vars['cron'] = self::WORKFLOW_OPTION['cron'];
-          $vars['checkout'] = self::WORKFLOW_OPTION['checkout'];
-          $vars['run'] = self::WORKFLOW_OPTION['run'];
 
           if (!file_exists($this->getTemplatePath() . DIRECTORY_SEPARATOR . self::WORKFLOW_TEMPLATE)) {
             throw new \Exception('Workflow template file does not exist.');
@@ -269,7 +281,7 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
         ->render();
 
       // Exclusion notes.
-      if ($vars['exclusion_note']) {
+      if ($exclusion_note) {
         $this->io()->writeln(PHP_EOL);
         foreach ($exclusion_note as $note) {
           $this->io()->writeln($note . PHP_EOL);

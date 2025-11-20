@@ -6,15 +6,16 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - '{{ branch }}'
-      - '{{ branches }}'
+    {% for branch in branches %}
+      - {{ branch }}
+    {% endfor %}
   schedule:
     - cron: '{{ cron }}'
 
 permissions: read-all
 
 jobs:
-  running-tests:
+  {{ test }}:
     name: 'PHP {{ php }} - Drupal {{ drupal }} - PostgreSQL {{ pgsql }}'
     runs-on: 'ubuntu-latest'
     steps:
