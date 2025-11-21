@@ -189,22 +189,21 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
       foreach ($strategy_matrix['exclude'] as $exclude) {
         $php = $exclude[self::WORKFLOW_VERSION['php']] ?? 0;
         $drupal = $exclude[self::WORKFLOW_VERSION['drupal']];
+        $pgsql = $exclude[self::WORKFLOW_VERSION['pgsql']] ?? 0;
 
         if (!$php) {
           // Short hand instruction without PHP, will exclude all Drupal version
           // for every PHP version in the strategy.
           foreach ($strategy_matrix[self::WORKFLOW_VERSION['php']] as $php) {
-            unset($webserver_stack[$php][$drupal]);
-            $exclusion_note[] = '## PHP ' . $php . ' - Drupal ' . $drupal;
+            unset($webserver_stack[$php][$drupal][$pgsql]);
+            $exclusion_note[] = '## PHP ' . $php . ' - Drupal ' . $drupal . ' - PostgreSQL ' . $pgsql;
           }
 
           continue;
         }
 
-        $pgsql = $exclude[self::WORKFLOW_VERSION['pgsql']] ?? 0;
-
         if (isset($webserver_stack[$php]) && isset($webserver_stack[$php][$drupal])) {
-          if (isset($exclude[$pgsql])) {
+          if ($pgsql) {
             unset($webserver_stack[$php][$drupal][$pgsql]);
           }
           else {
@@ -274,6 +273,23 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
         $grid_rows['badge'][] = $badge;
       }
 
+      // Allow the removal of specific grid column (Drupal header).
+      $header_choices = $grid_header;
+      $header_choices[0] = 'none - Keep all columns';
+      $col_remove = (int) $ir->choice(
+        'Select grid column header to remove',
+        array_values($header_choices),
+        $header_choices[0]
+      );
+
+      if ($col_remove) {
+        unset($grid_header[$col_remove]);
+
+        for ($i = 0; $i < count($grid_rows['grid']); $i++) {
+          unset($grid_rows['grid'][$i][$header_choices[$col_remove]]);
+        }
+      }
+
       // Table grid.
       // @see symfony.com/doc/current/components/console/helpers/table.html
       $this->io()->writeln(PHP_EOL . 'Copy and paste table grid below into README file.' . PHP_EOL);
@@ -283,9 +299,10 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
         ->setRows($grid_rows['grid'])
         ->render();
 
-      // Exclusion notes.
+      // Exclude notes.
+      $this->io()->writeln(PHP_EOL);
       if ($exclusion_note) {
-        $this->io()->writeln(PHP_EOL);
+        $this->io()->writeln('Exclude notes:' . PHP_EOL);
         foreach ($exclusion_note as $note) {
           $this->io()->writeln($note . PHP_EOL);
         }
