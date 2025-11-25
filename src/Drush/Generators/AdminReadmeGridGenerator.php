@@ -60,7 +60,6 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
     'name' => 'PHPUnit',
     'branches' => [
       '4.x',
-      'tv4g0-issue2247-support-php-8.4',
     ],
     'cron' => '0 6 * * *',
     'test' => 'running-tests',
