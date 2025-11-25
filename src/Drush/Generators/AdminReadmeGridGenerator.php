@@ -223,15 +223,15 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
         $vars[$key] = $value;
       }
 
+      if (!file_exists($this->getTemplatePath() . DIRECTORY_SEPARATOR . self::WORKFLOW_TEMPLATE)) {
+        throw new \Exception('Workflow template file does not exist.');
+      }
+
       foreach ($webserver_stack as $php => $drupal_pgsql) {
         $row = [];
         $badge = [];
 
         $row[$grid_header[0]] = '**PHP' . $php . '**';
-
-        $vars['php'] = '';
-        $vars['drupal'] = '';
-        $vars['pgsql'] = '';
 
         foreach ($strategy_matrix[self::WORKFLOW_VERSION['drupal']] as $drupal) {
           if (!isset($drupal_pgsql[$drupal])) {
@@ -239,9 +239,10 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
             continue;
           }
 
-          // Php PHP VER _D DRUPAL VER (ie. php8.1_D10.4.x-dev).
+          // Php PHP VER _D DRUPAL VER (ie. php81_D104.x-dev).
           $grid = '[Grid' . str_replace('.', '', (string) $php) . '-' . str_replace(['.', 'x-dev'], '', (string) $drupal) . '-Badge]';
-          $filename = sprintf('MAIN-phpunit-%s.yml', 'php' . $php . '_D' . $drupal);
+          // Php PHP VER _D DRUPAL VER (ie. php.1_D104x).
+          $filename = sprintf('MAIN-phpunit-%s.yml', 'php' . $php . '_D' . str_replace(['.', '-dev'], '', (string) $drupal));
 
           $row[$drupal] = '!' . $grid;
           $badge[$drupal] = $grid . ' : ' . implode(DIRECTORY_SEPARATOR, [
@@ -254,22 +255,31 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
             'badge.svg',
           ]);
 
-          $vars['php'] = $php;
-          $vars['drupal'] = $drupal;
-          $vars['pgsql'] = max($drupal_pgsql[$drupal]);
-
-          if (!file_exists($this->getTemplatePath() . DIRECTORY_SEPARATOR . self::WORKFLOW_TEMPLATE)) {
-            throw new \Exception('Workflow template file does not exist.');
-          }
+          // In twig - stack[filename].php/drupal/pgsql.
+          // @see assets loop below about filename.
+          $vars['stack'][$filename] = [
+            'php' => $php,
+            'drupal' => $drupal,
+            'pgsql' => max($drupal_pgsql[$drupal]),
+          ];
 
           $assets->addFile(
             (($is_package) ? '../' : '/') . self::WORKFLOW_DIR . DIRECTORY_SEPARATOR . $filename,
-            self::WORKFLOW_TEMPLATE
+            self::WORKFLOW_TEMPLATE,
           );
         }
 
         $grid_rows['grid'][] = $row;
         $grid_rows['badge'][] = $badge;
+      }
+
+      // Inject the filename into the vars for each addFile() call.
+      // The filename is then used to reference which php-drupal-pgsql combo
+      // to encode into the yml file.
+      foreach ($assets as $value) {
+        $temp_vars = $value->getVars();
+        $temp_vars['filename'] = trim(str_replace([self::WORKFLOW_DIR, '/', '..'], '', $value->getPath()));
+        $value->vars($temp_vars);
       }
 
       // Allow the removal of specific grid column (Drupal header).

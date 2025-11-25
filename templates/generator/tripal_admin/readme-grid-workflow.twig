@@ -14,6 +14,10 @@ on:
 
 permissions: read-all
 
+{% set php = stack[filename].php %}
+{% set drupal = stack[filename].drupal %}
+{% set pgsql = stack[filename].pgsql %}
+
 jobs:
   {{ test }}:
     name: 'PHP {{ php }} - Drupal {{ drupal }} - PostgreSQL {{ pgsql }}'
