@@ -218,6 +218,16 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
       $grid_header = array_merge(['PHP\Drupal'], $strategy_matrix[self::WORKFLOW_VERSION['drupal']]);
       $grid_rows = [];
 
+      // Allow the removal of specific grid column (Drupal header).
+      $header_choices = $grid_header;
+      $header_choices[0] = 'none - Keep all columns';
+
+      $col_remove = (int) $ir->choice(
+        'Select grid column header to remove',
+        array_values($header_choices),
+        $header_choices[0]
+      );
+
       // Setup workflow template static values.
       $vars['module_directory_name'] = basename($module->getPath());
       $vars['apply_module'] = implode(', ', $apply_module);
@@ -238,7 +248,13 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
 
         foreach ($strategy_matrix[self::WORKFLOW_VERSION['drupal']] as $drupal) {
           if (!isset($drupal_pgsql[$drupal])) {
+            // A shorthand.
             $row[$drupal] = '';
+            continue;
+          }
+
+          if ($col_remove && $header_choices[$col_remove] == $drupal) {
+            // Column to remove.
             continue;
           }
 
@@ -300,20 +316,12 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
         $value->vars($temp_vars);
       }
 
-      // Allow the removal of specific grid column (Drupal header).
-      $header_choices = $grid_header;
-      $header_choices[0] = 'none - Keep all columns';
-      $col_remove = (int) $ir->choice(
-        'Select grid column header to remove',
-        array_values($header_choices),
-        $header_choices[0]
-      );
-
       if ($col_remove) {
         unset($grid_header[$col_remove]);
 
         for ($i = 0; $i < count($grid_rows['grid']); $i++) {
           unset($grid_rows['grid'][$i][$header_choices[$col_remove]]);
+          unset($grid_rows['badge'][$i][$header_choices[$col_remove]]);
         }
       }
 
@@ -327,13 +335,13 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
         ->render();
 
       // Exclude notes.
-      $this->io()->writeln(PHP_EOL);
-      if ($exclusion_note) {
-        $this->io()->writeln('Exclude notes:' . PHP_EOL);
-        foreach ($exclusion_note as $note) {
-          $this->io()->writeln($note . PHP_EOL);
-        }
-      }
+      // $this->io()->writeln(PHP_EOL);
+      // if ($exclusion_note) {
+      //   $this->io()->writeln('Exclude notes:' . PHP_EOL);
+      //   foreach ($exclusion_note as $note) {
+      //     $this->io()->writeln($note . PHP_EOL);
+      //   }
+      // }.
 
       // Grid badges.
       $this->io()->writeln(PHP_EOL);
