@@ -144,7 +144,7 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
       }
 
       // Prompt to ask which sub-modules the workflow apply.
-      $apply_all = $ir->confirm('The package module (Repository) has sub-modules. Apply workflow to all [' . implode(', ', $sub_modules) . '] (Yes) or select from list (No)', TRUE);
+      $apply_all = $ir->confirm('The package module (Repository) has sub-modules. Apply workflow to all [' . implode(', ', array_merge([$machine_name], $sub_modules)) . '] (Yes) or select from list (No)', TRUE);
 
       foreach ($sub_modules as $sub_module) {
         $apply_to = '';
