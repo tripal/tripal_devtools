@@ -91,7 +91,10 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
       throw new \Exception('Module does not exist.');
     }
 
-    $phpunit_yml = '%s' . DIRECTORY_SEPARATOR . self::WORKFLOW_DIR . DIRECTORY_SEPARATOR . self::WORKFLOW_FILE;
+    $phpunit_yml = self::WORKFLOW_DIR . DIRECTORY_SEPARATOR . self::WORKFLOW_FILE;
+    $this->io()->note("We use the PHPUnit matrixed workflow to determine the combinations being tested.");
+    $this->io()->note("Specifically, we expect there to be a Github Workflow ($phpunit_yml) with the 'jobs.run-tests.strategy.matrix' defined.");
+    $phpunit_yml = '%s' . DIRECTORY_SEPARATOR . $phpunit_yml;
 
     $module_path = $module->getPath();
     $module_phpunit = sprintf($phpunit_yml, $module_path);
