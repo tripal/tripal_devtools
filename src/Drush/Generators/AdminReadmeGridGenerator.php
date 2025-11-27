@@ -242,10 +242,25 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
             continue;
           }
 
-          // Php PHP VER _D DRUPAL VER (ie. php81_D104.x-dev).
-          $grid = '[Grid' . str_replace('.', '', (string) $php) . '-' . str_replace(['.', 'x-dev'], '', (string) $drupal) . '-Badge]';
-          // Php PHP VER _D DRUPAL VER (ie. php.1_D104x).
-          $filename = sprintf('MAIN-phpunit-%s.yml', 'php' . $php . '_D' . str_replace(['.', '-dev'], '', (string) $drupal));
+          // Simplified Drupal version.
+          // For example, "10_4x" for Drupal 10.4.x-dev
+          // or "10_45" for Drupal 10.4.5.
+          if (preg_match('/(\w+)\.(\w+)\.(\w+)(-dev)*/', (string) $drupal, $matches)) {
+            $drupal_simplified = $matches[1] . '_' . $matches[2] . $matches[3];
+          }
+          // For example, "11x" for Drupal 11.x-dev.
+          elseif (preg_match('/(\w+)\.x-dev/', (string) $drupal, $matches)) {
+            $drupal_simplified = $matches[1] . 'x';
+          }
+          else {
+            $drupal_simplified = str_replace(['.', '-dev'], '', (string) $drupal);
+          }
+          // Grid token used in the readme.
+          // For example, "Grid81-104-Badge" for PHP 8.1 and Drupal 10.4.x-dev.
+          $grid = '[Grid' . str_replace('.', '', (string) $php) . '-' . str_replace(['_', 'x'], '', (string) $drupal_simplified) . '-Badge]';
+          // Workflow filename.
+          // For example, "MAIN-phpunit-php8.1_D10_4x.yml" for the same combo.
+          $filename = 'MAIN-phpunit-php' . $php . '_D' . $drupal_simplified . '.yml';
 
           $row[$drupal] = '!' . $grid;
           $badge[$drupal] = $grid . ' : ' . implode(DIRECTORY_SEPARATOR, [
