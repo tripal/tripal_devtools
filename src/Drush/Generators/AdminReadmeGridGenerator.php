@@ -116,7 +116,7 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
 
     if ($is_package) {
       // Confirm that it is a package.
-      $confirm_is_package = $ir->confirm('The module is a package, and the generator located the GitHub Workflow in the parent directory: ' . $module_path . ' and not in ' . $module->getPath() . '. Is the module a package?', TRUE);
+      $confirm_is_package = $ir->confirm('We located the GitHub Workflow in the parent directory: ' . $module_path . ' and not in ' . $module->getPath() . ', which implies this module is part of a package (i.e. multiple modules in a single repository). Is the module part of a package?', TRUE);
 
       if (!$confirm_is_package) {
         throw new \Exception('Could not find the workflow directory. Ensure that you have setup the directory .github/workflows/ in the module path and retry the command.');
