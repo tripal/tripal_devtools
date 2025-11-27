@@ -332,7 +332,7 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
     }
     else {
 
-      $this->io()->writeln('Exited workflow grid generator.');
+      $this->io()->writeln('Exited workflow grid generator. Please go delete the existing badge-focused workflow files (e.g. .github/workflows/MAIN-phpunit-VERSIONCOMBO.yml) and then run this command again.');
     }
   }
 
