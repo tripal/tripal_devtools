@@ -165,7 +165,7 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
     }
 
     // Confirm removal of existing workflow files.
-    if ($ir->confirm('Delete existing workflow files before running this command.', TRUE)) {
+    if ($ir->confirm('This command expects the existing badge-focused workflow files (e.g. .github/workflows/MAIN-phpunit-VERSIONCOMBO.yml) to be deleted already. Have you deleted them?', TRUE)) {
 
       $parse_build = Yaml::parseFile($module_phpunit);
 
