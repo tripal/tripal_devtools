@@ -63,8 +63,8 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
     ],
     'cron' => '0 6 * * *',
     'test' => 'running-tests',
-    'checkout' => 'actions/checkout@v4',
-    'run' => 'tripal/test-tripal-action@v1.7',
+    'checkout' => 'actions/checkout@v6',
+    'run' => 'tripal/test-tripal-action@v1.8',
   ];
 
   /**
@@ -279,7 +279,7 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
           $filename = 'MAIN-phpunit-php' . $php . '_D' . $drupal_simplified . '.yml';
 
           $row[$drupal] = '!' . $grid;
-          $badge[$drupal] = $grid . ' : ' . implode(DIRECTORY_SEPARATOR, [
+          $badge[$drupal] = $grid . ': ' . implode(DIRECTORY_SEPARATOR, [
             'https://github.com',
             $module->getName(),
             $module->getName(),
@@ -329,25 +329,20 @@ final class AdminReadmeGridGenerator extends BaseGenerator {
       // @see symfony.com/doc/current/components/console/helpers/table.html
       $this->io()->writeln(PHP_EOL . 'Copy and paste table grid below into README file.' . PHP_EOL);
       $table_grid = new Table($this->io()->getOutput());
+      $table_grid->setStyle('markdown');
       $table_grid
         ->setHeaders($grid_header)
         ->setRows($grid_rows['grid'])
         ->render();
 
-      // Exclude notes.
-      // $this->io()->writeln(PHP_EOL);
-      // if ($exclusion_note) {
-      //   $this->io()->writeln('Exclude notes:' . PHP_EOL);
-      //   foreach ($exclusion_note as $note) {
-      //     $this->io()->writeln($note . PHP_EOL);
-      //   }
-      // }.
-
+      // @debug confirm that short form exclude in ALL-phpunit.yml.
+      // @debug foreach ($exclusion_note as $note) { $this->io()->writeln($note . PHP_EOL); }
+      //
       // Grid badges.
       $this->io()->writeln(PHP_EOL);
       foreach ($grid_rows['badge'] as $rows) {
         foreach ($rows as $badge) {
-          $this->io()->writeln($badge . PHP_EOL);
+          $this->io()->writeln($badge);
         }
       }
 
