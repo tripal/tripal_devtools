@@ -36,13 +36,13 @@ final class ChadoFieldGenerator extends BaseGenerator {
     // Validators.
     $id_validator = new RegExp('/^[a-z][a-z0-9_]*[a-z0-9]$/', 'The value must consist of only lower case alphanumeric characters and underscores. It should start with a letter and not end with an underscore.');
     $label_validator = new RegExp('/^[a-zA-Z][a-zA-Z0-9- ]*[a-zA-Z0-9]$/', 'The value must be alphanumeric. We suggest focusing on a title-case human-readable name for your field.');
-    $term_validator = new RegExp('/:/', 'The value must be an ID Space and Accession defining the term with a : separating them (e.g. rdfs:type).');
 
     // Field Type.
     $vars['field_id'] = $prompt->ask('Field Type | ID', 'chado_example', $id_validator);
     $vars['field_label'] = $prompt->ask('Field Type | Label', Utils::machine2human($vars['field_id'], TRUE) . ' Field Type', $label_validator);
     $vars['field_description'] = $prompt->ask('Field Type | Description');
     $vars['field_class'] = $prompt->askClass('Field Type | Class', '{field_id|camelize}TypeItem');
+    $vars['field_category'] = $prompt->ask('Field Category', 'tripal_chado', $id_validator);
 
     // Field Widget.
     $vars['widget_id'] = $prompt->ask('Field Widget | ID', '{field_id}_widget', $id_validator);

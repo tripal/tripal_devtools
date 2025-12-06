@@ -40,6 +40,7 @@ final class ChadoFieldTypeGenerator extends BaseGenerator {
     $vars['widget_id'] = $prompt->ask('Default Field Widget ID', '{field_id}_widget', $id_validator);
     $vars['formatter_id'] = $prompt->ask('Default Field Formatter ID', '{field_id}_formatter', $id_validator);
     $vars['field_class'] = $prompt->askClass(default: '{field_id|camelize}TypeItem');
+    $vars['field_category'] = $prompt->ask('Field Category', 'tripal_chado', $id_validator);
 
     $assets->addFile('src/Plugin/Field/FieldType/{field_class}.php', 'chado-field-type.twig');
   }

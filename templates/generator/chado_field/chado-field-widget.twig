@@ -1,24 +1,24 @@
-<?php declare(strict_types = 1);
+<?php
 
 namespace Drupal\{{ machine_name }}\Plugin\Field\FieldWidget;
 
-use Drupal\tripal\TripalField\TripalWidgetBase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\tripal\TripalField\Attribute\TripalFieldWidget;
 use Drupal\tripal_chado\TripalField\ChadoWidgetBase;
 
 /**
- * Plugin implementation of the '{{ widget_id }}' field widget for '{{ field_id }}'.
- *
- * @FieldWidget(
- *   id = "{{ widget_id }}",
- *   label = @Translation("{{ widget_label }}"),
- *   description = @Translation("{{ widget_description }}"),
- *   field_types = {
- *     "{{ field_id }}"
- *   }
- * )
+ * Plugin implementation of the '{{ widget_id }}' field widget.
  */
+#[TripalFieldWidget(
+  id: '{{ widget_id }}',
+  label: new TranslatableMarkup('{{ widget_label }}'),
+  description: new TranslatableMarkup('{{ widget_description }}'),
+  field_types: [
+    '{{ field_id }}',
+  ],
+)]
 class {{ widget_class }} extends ChadoWidgetBase {
 
   /**
@@ -29,16 +29,36 @@ class {{ widget_class }} extends ChadoWidgetBase {
     // Grab the values for our properties based on the passed in delta.
     // For fields with a cardinality above 1, this is called one per record
     // with the delta indicating the current record.
-    // $item_vals = $items[$delta]->getValue();
+    $item_vals = $items[$delta]->getValue();
 
     // Define your form elements here.
-    // $element['value'] = [
-    //   '#type' => 'value',
-    //   '#default_value' => $item_vals['value'] ?? 0,
-    // ];
+    $element['value'] = [
+      '#type' => 'textfield',
+      '#default_value' => $item_vals['value'] ?? '',
+    ];
+
+    // You can define extra elements that are not saved in chado as well.
+    $element['suffix'] = [
+      '#type' => 'textfield',
+      '#default_value' => $item_vals['suffix'] ?? '',
+    ];
 
     return $element;
   }
 
-}
+  /**
+   * {@inheritDoc}
+   */
+  public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
 
+    // You may need to massage the values submitted by the widget before
+    // passing it on to the backend storage. The values will be passed on to
+    // the backend storage. For example, if you had a second element in the
+    // widget that indicated the suffix to attach to the value you could
+    // add it like this assuming a cardinality: 1.
+    $values[0]['value'] = $values[0]['value'] . ' ' . $values[0]['suffix'];
+
+    return $values;
+  }
+
+}

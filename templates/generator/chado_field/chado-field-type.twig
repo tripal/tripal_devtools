@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php
 
 namespace Drupal\{{ machine_name }}\Plugin\Field\FieldType;
 
@@ -34,7 +34,7 @@ class {{ field_class }} extends ChadoFieldItemBase {
    *
    * @var string
    */
-  public static string $id = "{{ field_id }}";
+  public static $id = "{{ field_id }}";
 
   /**
    * Flag to indicate a base column selector should be shown.
@@ -44,7 +44,7 @@ class {{ field_class }} extends ChadoFieldItemBase {
    *   select list on the field configuration form. When FALSE, no selector
    *   will be available.
    */
-  protected static bool $select_base_column = TRUE;
+  protected static $select_base_column = TRUE;
 
   /**
    * Valid column types to pass to the ChadoFieldItemBase parent class.
@@ -192,6 +192,7 @@ class {{ field_class }} extends ChadoFieldItemBase {
 
   /**
    * {@inheritDoc}
+   *
    * @see \Drupal\tripal_chado\TripalField\ChadoFieldItemBase::isCompatible()
    */
   public function isCompatible(TripalEntityType $entity_type) : bool {
