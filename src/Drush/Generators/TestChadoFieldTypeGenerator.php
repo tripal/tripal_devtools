@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Drupal\tripal_devtools\Drush\Generators;
 
 use DrupalCodeGenerator\Asset\AssetCollection as Assets;
@@ -25,14 +23,14 @@ class TestChadoFieldTypeGenerator extends BaseGenerator {
    *
    * @var object
    */
-  private object $prompt;
+  protected object $prompt;
 
   /**
    * The field definitions added to the system under test.
    *
    * @var array
    */
-  private array $field_definitions;
+  protected array $field_definitions;
 
   /**
    * {@inheritdoc}
@@ -78,7 +76,7 @@ class TestChadoFieldTypeGenerator extends BaseGenerator {
    * @return TripalEntityType
    *   The bundle object used to fill out the test info yaml array.
    */
-  private function addBundleInfo(string $bundle_id, array &$test_info_yaml) {
+  protected function addBundleInfo(string $bundle_id, array &$test_info_yaml) {
 
     // First we need to get the bundle object.
     $bundle = \Drupal::entityTypeManager()->getStorage('tripal_entity_type')->load($bundle_id);
@@ -103,9 +101,14 @@ class TestChadoFieldTypeGenerator extends BaseGenerator {
    * @param array $test_info_yaml
    *   The current test information yaml array from the generate method.
    */
-  private function addFieldInfo(string $bundle_id, array &$test_info_yaml) {
+  protected function addFieldInfo(string $bundle_id, array &$test_info_yaml) {
+
     // Get all the fields for this bundle.
     $this->field_definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('tripal_entity', $bundle_id);
+
+    // We need the Field Type Plugin Manager to get the class.
+    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    $type_definitions = $field_type_manager->getDefinitions();
 
     // For each field, add the details to the system under test.
     foreach ($this->field_definitions as $field_name => $field_defn) {
@@ -113,18 +116,19 @@ class TestChadoFieldTypeGenerator extends BaseGenerator {
         $field_storage_defn = $field_defn->getFieldStorageDefinition();
         $field_yaml = [];
 
+        // Get the field type information.
+        $field_type = $field_defn->getType();
+        $field_type_defn = $type_definitions[$field_type];
+
         // Basic field type info.
         $field_yaml['name'] = $field_name;
         $field_yaml['type'] = $field_defn->getType();
-        // @todo actually set this.
-        $field_yaml['type_class'] = '';
+        $field_yaml['type_class'] = $field_type_defn['class'];
         $field_yaml['cardinality'] = $field_storage_defn->getCardinality();
 
         // Field Widget and formatter information.
-        // @todo actually set this.
-        $field_yaml['widget'] = '';
-        // @todo actually set this.
-        $field_yaml['formatter'] = '';
+        $field_yaml['widget'] = $field_type_defn['default_widget'];
+        $field_yaml['formatter'] = $field_type_defn['default_formatter'];
 
         // Field settings such as term and storage info.
         $field_settings = $field_defn->getSettings();
