@@ -16,7 +16,7 @@ use Drupal\tripal\Entity\TripalEntityType;
 #[Generator(
   name: 'tripal-chado:test-field-type',
   description: 'Generates a PHPUnit Kernel Test to test a specific Chado field type.',
-  templatePath: __DIR__ . '/../../../templates/generator',
+  templatePath: __DIR__ . '/../../../templates/generator/chado_field',
   type: GeneratorType::MODULE_COMPONENT,
 )]
 class TestChadoFieldTypeGenerator extends BaseGenerator {
@@ -63,15 +63,17 @@ class TestChadoFieldTypeGenerator extends BaseGenerator {
 
     // Now start building the test information yaml file.
     $test_info_yaml = [
-      'chado_version' => '',
-      'bundle' => [],
-      'fields' => [],
+      'system-under-test' => [
+        'chado_version' => '',
+        'bundle' => [],
+        'fields' => [],
+      ],
       'scenarios' => [],
     ];
 
     // Chado Version.
     $vars['chado_version'] = $this->prompt->ask('Chado Version', '1.3.3.013');
-    $test_info_yaml['chado_version'] = $vars['chado_version'];
+    $test_info_yaml['system-under-test']['chado_version'] = $vars['chado_version'];
 
     // Bundle Information.
     $vars['bundle_id'] = $this->prompt->ask('Existing Tripal Content Type to test fields on', 'organism');
@@ -81,18 +83,25 @@ class TestChadoFieldTypeGenerator extends BaseGenerator {
     // the system under test.
     foreach ($this->field_definitions as $field_name => $field_defn) {
       if (get_class($field_defn) == 'Drupal\field\Entity\FieldConfig') {
-        if ($this->prompt->confirm("Add $field_name to the system-under-test?")) {
-          $this->addFieldInfo($vars['bundle_id'], $field_defn, $test_info_yaml);
-        }
+        //if ($this->prompt->confirm(" - Add $field_name to the system-under-test?")) {
+        $this->addFieldInfo($vars['bundle_id'], $field_defn, $test_info_yaml);
+        //}
       }
     }
 
-    // Ask what field type you would like to test.
-    $vars['chado_field'] = $this->prompt->ask('Existing field type which you would like to test', 'ChadoPropertyType');
+    // Now add a scenario based on the default values.
+    $this->addDefaultScenario($vars, $test_info_yaml);
+
+    // Ask what file to save the test in.
+    $vars['test_class'] = $this->prompt->ask('What should be the class name for the generated test (must end with "Test")', 'BaseFieldTest');
+    $vars['test_yml'] = trim($vars['test_class'], 'Test') . '-' . $vars['bundle_id'] . '-TestInfo.yml';
+    $vars['test_path'] = $this->prompt->ask('Where should the test files be created (relative to module directory)', 'tests/src/Kernel/Plugin/ChadoField/FieldType');
 
     // We are now done generating the yaml file so lets create that.
-    $yaml_file = $assets->addFile($vars['chado_field'] . '-' . $vars['bundle_id'] . '-TestInfo.yml');
+    $yaml_file = $assets->addFile('{test_path}/{test_yml}');
     $yaml_file->content(Yaml::dump($test_info_yaml, 8, 2, Yaml::DUMP_COMPACT_NESTED_MAPPING));
+    // Then lets create the test file.
+    $assets->addFile('{test_path}/{test_class}.php', 'chado-field-type-test.twig');
   }
 
   /**
@@ -126,11 +135,11 @@ class TestChadoFieldTypeGenerator extends BaseGenerator {
     $this->field_type_definitions = $field_type_manager->getDefinitions();
 
     // Add the bundle info to the yaml array.
-    $test_info_yaml['bundle']['label'] = $bundle->getLabel();
-    $test_info_yaml['bundle']['termIdSpace'] = $bundle->getTermIdSpace();
-    $test_info_yaml['bundle']['termAccession'] = $bundle->getTermAccession();
-    $test_info_yaml['bundle']['id'] = $bundle->getID();
-    $test_info_yaml['bundle']['settings'] = $bundle->getThirdPartySettings('tripal');
+    $test_info_yaml['system-under-test']['bundle']['label'] = $bundle->getLabel();
+    $test_info_yaml['system-under-test']['bundle']['termIdSpace'] = $bundle->getTermIdSpace();
+    $test_info_yaml['system-under-test']['bundle']['termAccession'] = $bundle->getTermAccession();
+    $test_info_yaml['system-under-test']['bundle']['id'] = $bundle->getID();
+    $test_info_yaml['system-under-test']['bundle']['settings'] = $bundle->getThirdPartySettings('tripal');
 
     return $bundle;
   }
@@ -170,8 +179,41 @@ class TestChadoFieldTypeGenerator extends BaseGenerator {
     $field_yaml['termIdSpace'] = $field_settings['termIdSpace'];
     $field_yaml['termAccession'] = $field_settings['termAccession'];
     $field_yaml['settings'] = $field_settings;
-    $test_info_yaml['fields'][] = $field_yaml;
+    $test_info_yaml['system-under-test']['fields'][] = $field_yaml;
 
+  }
+
+  /**
+   * Adds the default scenario to the yaml based on the system-under-test.
+   *
+   * @param array $vars
+   *   The variables already set by the command.
+   * @param array $test_info_yaml
+   *   The current test information yaml array from the generate method.
+   */
+  protected function addDefaultScenario(array $vars, array &$test_info_yaml) {
+
+    $scenario = [
+      'label' => 'Default Values Only',
+      'description' => 'Creates a page using only default values for each field.',
+    ];
+
+    foreach (['create', 'edit'] as $first_lvl) {
+      $scenario[$first_lvl] = [];
+      foreach (['user_input', 'expected'] as $second_lvl) {
+        $scenario[$first_lvl][$second_lvl] = [];
+        foreach ($test_info_yaml['system-under-test']['fields'] as $field_yml) {
+          $field_name = $field_yml['name'];
+          // @todo add these values based on the field definition.
+          $scenario[$first_lvl][$second_lvl][$field_name] = [
+            'record_id' => 0,
+            'value' => '',
+          ];
+        }
+      }
+    }
+
+    $test_info_yaml['scenarios'][] = $scenario;
   }
 
 }
