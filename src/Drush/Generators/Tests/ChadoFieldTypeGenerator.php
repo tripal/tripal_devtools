@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\tripal_devtools\Drush\Generators;
+namespace Drupal\tripal_devtools\Drush\Generators\Tests;
 
 use Drupal\field\Entity\FieldConfig;
 use DrupalCodeGenerator\Asset\AssetCollection as Assets;
@@ -14,12 +14,12 @@ use Drupal\tripal\Entity\TripalEntityType;
  * Generates test files to test a specific field type.
  */
 #[Generator(
-  name: 'tripal-chado:test-field-type',
+  name: 'tripal-tests:chado-field-type',
   description: 'Generates a PHPUnit Kernel Test to test a specific Chado field type.',
-  templatePath: __DIR__ . '/../../../templates/generator/chado_field',
+  templatePath: __DIR__ . '/../../../../templates/generator/tests',
   type: GeneratorType::MODULE_COMPONENT,
 )]
-class TestChadoFieldTypeGenerator extends BaseGenerator {
+class ChadoFieldTypeGenerator extends BaseGenerator {
 
   /**
    * The interviewer created in the drush generate command.
