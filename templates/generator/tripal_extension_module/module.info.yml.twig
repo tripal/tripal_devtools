@@ -1,14 +1,14 @@
-name: {{ name }}
-type: module
-description: {{ description }}
-package: {{ package }}
-core_version_requirement: ^10.4 | ^11.1
+name: '{{ name }}'
+type: 'module'
+description: '{{ description }}'
+package: '{{ package }}'
+core_version_requirement: '^10.4 | ^11.1'
 {% if dependencies %}
 dependencies:
   {% for dependency in dependencies %}
-  - {{ dependency }}
+  - '{{ dependency }}'
   {% endfor %}
 {% endif %}
 {% if form %}
-configure: {{ machine_name }}.settings_form
+configure: '{{ machine_name }}.settings_form'
 {% endif %}
