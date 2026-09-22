@@ -12,12 +12,13 @@ jobs:
       fail-fast: false
       matrix:
         php-version:
-          - "8.3"
+          - "8.4"
         pgsql-version:
-          - "17"
+          - "18"
         drupal-version:
-          - "10.5.x-dev"
-          - "11.2.x-dev"
+          - "10.6.x"
+          - "11.4.x"
+          - "11.x-dev"
     name: Docker Build (drupal${{ matrix.drupal-version }})
     steps:
       - uses: actions/checkout@v5
@@ -33,8 +34,8 @@ jobs:
           buildArgs: "drupalversion=${{ matrix.drupal-version }},phpversion=${{ matrix.php-version}}"
           labels: 'tripal.branch=4.x,drupal.version.label="drupal${{ matrix.drupal-version }}",php.version.label="${{ matrix.php-version }}", postgresql.version.label="${{ matrix.pgsql-version }}"'
       - uses: mr-smithers-excellent/docker-build-push@v6
-        name: Build latest using 11.x-dev, 8.3 and 17
-        if: ${{ matrix.drupal-version == '11.x-dev' && matrix.php-version == '8.3' && matrix.pgsql-version == '17' }}
+        name: Build latest using 11.x-dev, 8.4 and 18
+        if: ${{ matrix.drupal-version == '11.x-dev' && matrix.php-version == '8.4' && matrix.pgsql-version == '18' }}
         with:
           image: tripalproject/tripaldocker-devtools
           tags: latest
